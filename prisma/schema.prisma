@@ -1,4 +1,3 @@
-// Full data model is added in Phase 2.
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,4 +6,315 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL") // Neon pooled connection (runtime)
   directUrl = env("DIRECT_URL") // Neon direct connection (migrations)
+}
+
+// All money fields are integer pence.
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum ProductType {
+  STITCHED
+  UNSTITCHED
+}
+
+enum OrderChannel {
+  WEBSITE
+  WHATSAPP
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_WHATSAPP_CONFIRMATION
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum BannerPlacement {
+  HERO
+  ANNOUNCEMENT
+}
+
+// ---------- Catalogue ----------
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  image       String?
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId, sortOrder])
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  name           String
+  slug           String         @unique
+  sku            String         @unique
+  description    String         @default("") // rich text (HTML)
+  careDetails    String?
+  fabric         String? // Lawn, Chiffon, Cambric, Khaddar, Organza...
+  pieces         Int? // 1, 2 or 3 piece
+  type           ProductType    @default(STITCHED)
+  basePrice      Int
+  salePrice      Int?
+  categoryId     String
+  category       Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  sizeChartId    String?
+  sizeChart      SizeChart?     @relation(fields: [sizeChartId], references: [id], onDelete: SetNull)
+  tags           String[]       @default([])
+  isFeatured     Boolean        @default(false)
+  isBestSeller   Boolean        @default(false)
+  isNew          Boolean        @default(false)
+  isActive       Boolean        @default(true)
+  seoTitle       String?
+  seoDescription String?
+  images         ProductImage[]
+  variants       Variant[]
+  orderItems     OrderItem[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([categoryId, isActive])
+  @@index([isActive, createdAt])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String? // Cloudinary public id, used for deletion and transformations
+  alt       String   @default("")
+  sortOrder Int      @default(0)
+  colourId  String? // optional: selecting this colour switches the gallery
+  colour    Colour?  @relation(fields: [colourId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([productId, sortOrder])
+}
+
+model Size {
+  id        String    @id @default(cuid())
+  label     String    @unique
+  sortOrder Int       @default(0)
+  variants  Variant[]
+}
+
+model Colour {
+  id       String         @id @default(cuid())
+  name     String         @unique
+  hex      String
+  variants Variant[]
+  images   ProductImage[]
+}
+
+model Variant {
+  id            String      @id @default(cuid())
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sizeId        String
+  size          Size        @relation(fields: [sizeId], references: [id], onDelete: Restrict)
+  colourId      String
+  colour        Colour      @relation(fields: [colourId], references: [id], onDelete: Restrict)
+  sku           String      @unique
+  stock         Int         @default(0)
+  priceOverride Int?
+  isActive      Boolean     @default(true)
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([productId, sizeId, colourId])
+  @@index([stock])
+}
+
+model SizeChart {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  // Array of rows: { size, chest, length, sleeve, trouserLength } in inches; cm is derived for display.
+  rows      Json
+  notes     String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ---------- Orders ----------
+
+model Order {
+  id                    String       @id @default(cuid())
+  // Human-friendly reference such as YM-10234, generated from a Postgres sequence.
+  orderNumber           String       @unique @default(dbgenerated("('YM-'::text || nextval('order_number_seq'::regclass))"))
+  // Unguessable token for the private /order/[token] summary page (256 random bits).
+  publicToken           String       @unique @default(dbgenerated("replace(((gen_random_uuid())::text || (gen_random_uuid())::text), '-'::text, ''::text)"))
+  channel               OrderChannel
+  status                OrderStatus  @default(PENDING)
+  userId                String?
+  user                  User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customerName          String?
+  email                 String?
+  phone                 String?
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  postcode              String?
+  country               String       @default("GB")
+  subtotal              Int
+  deliveryFee           Int          @default(0)
+  deliveryMethod        String?
+  discount              Int          @default(0)
+  total                 Int
+  stripeSessionId       String?      @unique
+  stripePaymentIntentId String?
+  // Set once stock has been deducted, so webhooks and confirmations are idempotent.
+  stockDeductedAt       DateTime?
+  notes                 String?
+  adminNotes            String?
+  items                 OrderItem[]
+  paidAt                DateTime?
+  confirmedAt           DateTime?
+  cancelledAt           DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@index([channel, status, createdAt])
+  @@index([status, createdAt])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId   String?
+  variant     Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  // Snapshots at order time, so later catalogue edits don't change past orders.
+  productName String
+  productSlug String?
+  sku         String
+  size        String
+  colour      String
+  quantity    Int
+  unitPrice   Int
+  lineTotal   Int
+
+  @@index([orderId])
+}
+
+// ---------- Content and settings ----------
+
+model Banner {
+  id        String          @id @default(cuid())
+  title     String
+  subtitle  String?
+  image     String?
+  ctaText   String?
+  ctaUrl    String?
+  placement BannerPlacement @default(HERO)
+  isActive  Boolean         @default(true)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([placement, isActive, sortOrder])
+}
+
+// Single row (id = 1). Every business value is editable from the admin panel.
+model Settings {
+  id                    Int      @id @default(1)
+  storeName             String   @default("YM Textiles")
+  whatsappNumber        String // E.164 without "+", e.g. 447XXXXXXXXX
+  whatsappGreeting      String   @default("Hi YM Textiles, I would like to order:")
+  freeDeliveryThreshold Int // pence
+  standardDeliveryFee   Int // pence
+  expressDeliveryFee    Int // pence
+  announcementText      String?
+  contactEmail          String?
+  instagramUrl          String?
+  tiktokUrl             String?
+  facebookUrl           String?
+  businessAddress       String?
+  returnsDays           Int      @default(14)
+  lowStockThreshold     Int      @default(3)
+  updatedAt             DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  consentAt      DateTime
+  source         String?
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+// ---------- Auth.js ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(CUSTOMER)
+  accounts      Account[]
+  sessions      Session[]
+  orders        Order[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @id
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
 }
