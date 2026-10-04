@@ -1,0 +1,10 @@
+// Full data model is added in Phase 2.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Neon pooled connection (runtime)
+  directUrl = env("DIRECT_URL") // Neon direct connection (migrations)
+}
