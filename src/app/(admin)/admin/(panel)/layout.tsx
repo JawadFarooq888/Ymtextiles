@@ -18,39 +18,42 @@ export default async function AdminPanelLayout({ children }: { children: React.R
   const isAdmin = user.role === "ADMIN";
 
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
-      <aside className="hidden border-r bg-card p-4 lg:block">
-        <Link href="/admin" className="mb-6 block px-3 font-heading text-2xl tracking-wide">
-          YM TEXTILES
-        </Link>
-        <AdminNav isAdmin={isAdmin} />
-      </aside>
-      <div className="min-w-0">
-        <header className="flex h-14 items-center gap-2 border-b bg-card px-4">
-          <MobileNav isAdmin={isAdmin} />
-          <span className="font-heading text-xl tracking-wide lg:hidden">YM TEXTILES</span>
-          <div className="ml-auto flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/" target="_blank">
-                <ExternalLinkIcon /> <span className="hidden sm:inline">View shop</span>
-              </Link>
-            </Button>
-            <Link
-              href="/admin/account"
-              className="hidden text-sm text-muted-foreground hover:text-primary hover:underline md:inline"
-            >
-              {user.email}
-            </Link>
-            <form action={logoutAction}>
-              <Button type="submit" variant="outline" size="sm">
-                <LogOutIcon /> Sign out
+    <>
+      <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
+        <aside className="hidden border-r bg-card p-4 lg:block">
+          <Link href="/admin" className="mb-6 block px-3 font-heading text-2xl tracking-wide">
+            YM TEXTILES
+          </Link>
+          <AdminNav isAdmin={isAdmin} />
+        </aside>
+        <div className="min-w-0">
+          <header className="flex h-14 items-center gap-2 border-b bg-card px-4">
+            <MobileNav isAdmin={isAdmin} />
+            <span className="font-heading text-xl tracking-wide lg:hidden">YM TEXTILES</span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/" target="_blank">
+                  <ExternalLinkIcon /> <span className="hidden sm:inline">View shop</span>
+                </Link>
               </Button>
-            </form>
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl p-4 md:p-8">{children}</main>
+              <Link
+                href="/admin/account"
+                className="hidden text-sm text-muted-foreground hover:text-primary hover:underline md:inline"
+              >
+                {user.email}
+              </Link>
+              <form action={logoutAction}>
+                <Button type="submit" variant="outline" size="sm">
+                  <LogOutIcon /> Sign out
+                </Button>
+              </form>
+            </div>
+          </header>
+          <main className="mx-auto max-w-6xl p-4 md:p-8">{children}</main>
+        </div>
       </div>
+      {/* Outside the grid so it does not add an extra grid row. */}
       <Toaster richColors position="top-right" />
-    </div>
+    </>
   );
 }
