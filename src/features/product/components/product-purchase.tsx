@@ -101,7 +101,7 @@ function PurchaseActions({
   // Buttons look disabled until a size and colour are chosen, but stay clickable so we can explain why.
   const dimmed = !ready && "opacity-60";
   return (
-    <div className="grid gap-3">
+    <div className="grid gap-3 pr-14 md:pr-0">
       <button
         type="button"
         onClick={addToBasket}

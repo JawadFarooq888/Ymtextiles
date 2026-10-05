@@ -46,7 +46,7 @@ export function FloatingWhatsApp({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"
-        className="fixed right-4 bottom-4 z-40 flex size-14 items-center justify-center rounded-full bg-[#1f9d55] text-white shadow-lg ring-4 ring-white/70 transition hover:scale-105 hover:bg-[#178347] focus-visible:outline-offset-4 md:right-6 md:bottom-6"
+        className="fixed right-3 bottom-3 z-40 flex size-12 items-center justify-center rounded-full bg-[#1f9d55] text-white shadow-lg ring-4 ring-white/70 transition hover:scale-105 hover:bg-[#178347] focus-visible:outline-offset-4 md:right-6 md:bottom-6 md:size-14"
       >
         <WhatsAppGlyph />
       </a>

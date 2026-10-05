@@ -10,7 +10,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
   return (
     <>
       <SiteHeader />
-      <main id="main" className="min-h-[60vh]">
+      <main id="main" className="min-h-[60vh] pb-16 md:pb-0">
         {children}
       </main>
       <SiteFooter />
