@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { loginAsAdmin } from "./helpers";
+import { cleanupTestData, loginAsAdmin } from "./helpers";
+
+test.afterAll(() => cleanupTestData());
 
 // 8x8 green PNG, small enough to upload quickly.
 const TEST_PNG = Buffer.from(

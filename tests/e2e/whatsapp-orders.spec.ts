@@ -1,5 +1,9 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { loginAsAdmin } from "./helpers";
+import { cleanupTestData, loginAsAdmin } from "./helpers";
+
+// Orders created here are deleted afterwards, even if a test fails.
+const createdOrders: string[] = [];
+test.afterAll(() => cleanupTestData(createdOrders));
 
 // Never hit the real WhatsApp: answer wa.me requests locally and inspect the URL instead.
 async function stubWhatsApp(context: BrowserContext) {
@@ -78,6 +82,7 @@ test("product page: WhatsApp order needs a selection, creates an order and opens
   expect(message.endsWith("Please confirm availability and delivery.")).toBe(true);
 
   const orderNumber = message.match(/Order ref: (YM-\d+)/)![1];
+  createdOrders.push(orderNumber);
   await expect(page.getByText(`Order ${orderNumber} created`)).toBeVisible();
 
   // The order exists in admin, awaiting confirmation. Confirm it (stock goes down), then cancel (stock comes back).
@@ -157,6 +162,7 @@ test("basket: add two items, validate details, order the whole basket on WhatsAp
   await expect(page.getByText("Your basket is empty")).toBeVisible();
 
   const orderNumber = message.match(/Order ref: (YM-\d+)/)![1];
+  createdOrders.push(orderNumber);
   await loginAsAdmin(page);
   await cancelOrderInAdmin(page, orderNumber);
 });
