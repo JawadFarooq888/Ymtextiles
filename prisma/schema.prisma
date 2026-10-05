@@ -254,7 +254,35 @@ model Settings {
   businessAddress       String?
   returnsDays           Int      @default(14)
   lowStockThreshold     Int      @default(3)
+  // WhatsApp orders: when false, customers outside the UK can order (postcode/town is free text).
+  whatsappUkOnly        Boolean  @default(true)
+  // Shop text
+  footerTagline         String   @default("Pakistani clothing, sourced in Pakistan and stocked in the UK.")
+  dispatchInfo          String? // e.g. "Orders are dispatched within 2 working days"
+  // Array of { title, text } for the home page "Why YM Textiles" section; null = defaults.
+  whyUs                 Json?
+  // Search engines
+  seoTitle              String   @default("YM Textiles | Pakistani Clothing in the UK")
+  seoDescription        String   @default("Lawn suits, ready to wear, unstitched fabric, formal and wedding wear, and menswear. Sourced in Pakistan, stocked in the UK.")
+  // Header menu shortcuts
+  menuShowNewIn         Boolean  @default(true)
+  menuShowLawn          Boolean  @default(true)
+  menuShowSale          Boolean  @default(true)
   updatedAt             DateTime @updatedAt
+}
+
+// Editable information pages (About, Delivery & Returns, Privacy...).
+// Body uses simple formatting: "## Heading", "- list item", blank line = new paragraph, [text](https://link).
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  body            String   @default("")
+  metaDescription String?
+  isPublished     Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model NewsletterSubscriber {

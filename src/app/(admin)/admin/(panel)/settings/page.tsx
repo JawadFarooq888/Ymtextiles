@@ -4,6 +4,7 @@ import { SettingsForm } from "@/features/admin/settings/settings-form";
 import { getSettingsForAdmin } from "@/features/admin/settings/service";
 import { requireAdmin } from "@/features/auth/guard";
 import { penceToPoundsInput } from "@/lib/money";
+import { parseWhyUs } from "@/features/content/why-us";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -34,6 +35,15 @@ export default async function SettingsPage() {
           businessAddress: s?.businessAddress ?? "",
           returnsDays: String(s?.returnsDays ?? 14),
           lowStockThreshold: String(s?.lowStockThreshold ?? 3),
+          whatsappUkOnly: s?.whatsappUkOnly ?? true,
+          dispatchInfo: s?.dispatchInfo ?? "",
+          footerTagline: s?.footerTagline ?? "",
+          seoTitle: s?.seoTitle ?? "",
+          seoDescription: s?.seoDescription ?? "",
+          menuShowNewIn: s?.menuShowNewIn ?? true,
+          menuShowLawn: s?.menuShowLawn ?? true,
+          menuShowSale: s?.menuShowSale ?? true,
+          whyUs: parseWhyUs(s?.whyUs),
         }}
       />
     </>

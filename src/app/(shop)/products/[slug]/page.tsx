@@ -164,6 +164,7 @@ export default async function ProductPage({ params }: { params: Params }) {
                   : ""}
               </li>
               <li>UK express delivery: {formatPence(settings.expressDeliveryFee)}</li>
+              {settings.dispatchInfo ? <li>{settings.dispatchInfo}</li> : null}
               <li>
                 You have {settings.returnsDays} days from delivery to cancel and return your order
                 (UK Consumer Contracts Regulations).

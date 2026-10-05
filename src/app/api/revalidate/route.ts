@@ -12,6 +12,7 @@ const ALLOWED = [
   TAGS.attributes,
   TAGS.banners,
   TAGS.settings,
+  TAGS.pages,
 ] as const;
 const bodySchema = z.object({ tags: z.array(z.enum(ALLOWED)).min(1).max(ALLOWED.length) });
 

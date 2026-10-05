@@ -21,6 +21,10 @@ test("all admin pages load", async ({ page }) => {
     ["/admin/size-charts/new", "New size chart"],
     ["/admin/banners", "Banners"],
     ["/admin/settings", "Settings"],
+    ["/admin/pages", "Pages"],
+    ["/admin/newsletter", "Newsletter"],
+    ["/admin/users", "Users"],
+    ["/admin/account", "My account"],
   ] as const) {
     await page.goto(path);
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
@@ -92,5 +96,36 @@ test("admin creates a product and it appears in the shop", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/products$/);
 
   const gone = await page.goto(`/products/${slug}`);
+  expect(gone?.status()).toBe(404);
+});
+
+test("admin edits a page and the shop shows it", async ({ page }) => {
+  const slug = `e2e-page-${Date.now()}`;
+  await loginAsAdmin(page);
+  await page.goto("/admin/pages/new");
+  await page.getByLabel("Title").fill("E2E Test Page");
+  await page.getByLabel("Address").fill(slug);
+  await page
+    .getByLabel("Page text")
+    .fill(
+      ["## Our promise", "", "We reply on **WhatsApp**.", "", "- Fast", "- Friendly"].join("\n"),
+    );
+  // Live preview renders the formatting
+  await expect(
+    page.getByRole("region", { name: "Preview" }).getByRole("heading", { name: "Our promise" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Save page" }).click();
+  await expect(page).toHaveURL(/\/admin\/pages\/(?!new)[a-z0-9]+$/);
+
+  await page.goto(`/pages/${slug}`);
+  await expect(page.getByRole("heading", { name: "E2E Test Page", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Our promise" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Friendly" })).toBeVisible();
+
+  await page.goBack();
+  await page.getByRole("button", { name: "Delete E2E Test Page" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+  await expect(page).toHaveURL(/\/admin\/pages$/);
+  const gone = await page.goto(`/pages/${slug}`);
   expect(gone?.status()).toBe(404);
 });

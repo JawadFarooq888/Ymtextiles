@@ -87,10 +87,24 @@ export interface MenuItem {
   highlight?: boolean;
 }
 
-/** Header menu: New In, the top-level categories (with sub-categories), Lawn, Sale. */
-export function buildMenu(tree: NavCategory[]): MenuItem[] {
-  return [
-    { label: "New In", href: "/collections/new-in", children: [], image: null },
+export interface MenuOptions {
+  showNewIn: boolean;
+  showLawn: boolean;
+  showSale: boolean;
+}
+
+/** Header menu: New In, the top-level categories (with sub-categories), Lawn, Sale (each optional in Settings). */
+export function buildMenu(
+  tree: NavCategory[],
+  options: MenuOptions = { showNewIn: true, showLawn: true, showSale: true },
+): MenuItem[] {
+  const items: (MenuItem | false)[] = [
+    options.showNewIn && {
+      label: "New In",
+      href: "/collections/new-in",
+      children: [],
+      image: null,
+    },
     ...tree.map((c) => ({
       label: c.name,
       href: `/collections/${c.slug}`,
@@ -100,7 +114,14 @@ export function buildMenu(tree: NavCategory[]): MenuItem[] {
         href: `/collections/${child.slug}`,
       })),
     })),
-    { label: "Lawn", href: "/collections/lawn", children: [], image: null },
-    { label: "Sale", href: "/collections/sale", children: [], image: null, highlight: true },
+    options.showLawn && { label: "Lawn", href: "/collections/lawn", children: [], image: null },
+    options.showSale && {
+      label: "Sale",
+      href: "/collections/sale",
+      children: [],
+      image: null,
+      highlight: true,
+    },
   ];
+  return items.filter((item): item is MenuItem => item !== false);
 }

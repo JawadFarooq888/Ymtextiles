@@ -9,25 +9,9 @@ import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { buildWhatsAppUrl } from "@/features/whatsapp/url";
 import { cloudinaryUrl } from "@/lib/image";
 import { getSettings } from "@/lib/settings";
+import { parseWhyUs } from "@/features/content/why-us";
 
-const WHY = [
-  {
-    icon: PlaneIcon,
-    title: "Sourced in Pakistan",
-    text: "Chosen directly from Pakistani makers and brands.",
-  },
-  { icon: StoreIcon, title: "Stocked in the UK", text: "Already here, so it reaches you quickly." },
-  {
-    icon: RulerIcon,
-    title: "Real measurements",
-    text: "Size charts in inches and centimetres for every style.",
-  },
-  {
-    icon: MessageCircleIcon,
-    title: "Help on WhatsApp",
-    text: "Ask about fit, fabric or delivery and get a real reply.",
-  },
-];
+const WHY_ICONS = [PlaneIcon, StoreIcon, RulerIcon, MessageCircleIcon];
 
 export default async function HomePage() {
   const [banners, index, tree, settings] = await Promise.all([
@@ -109,15 +93,18 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-16">
           <SectionHeading id="why-ym" title="Why YM Textiles" centered />
           <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-            {WHY.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="text-center">
-                <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-background text-primary">
-                  <Icon className="size-6" aria-hidden />
-                </span>
-                <h3 className="mt-4 text-xl font-semibold">{title}</h3>
-                <p className="mt-1 text-sm">{text}</p>
-              </li>
-            ))}
+            {parseWhyUs(settings.whyUs).map(({ title, text }, i) => {
+              const Icon = WHY_ICONS[i] ?? MessageCircleIcon;
+              return (
+                <li key={title} className="text-center">
+                  <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-background text-primary">
+                    <Icon className="size-6" aria-hidden />
+                  </span>
+                  <h3 className="mt-4 text-xl font-semibold">{title}</h3>
+                  <p className="mt-1 text-sm">{text}</p>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </section>

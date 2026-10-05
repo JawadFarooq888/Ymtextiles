@@ -5,5 +5,6 @@ export const TAGS = {
   attributes: "attributes",
   banners: "banners",
   settings: "settings",
+  pages: "pages",
   product: (slug: string) => `product:${slug}`,
 } as const;

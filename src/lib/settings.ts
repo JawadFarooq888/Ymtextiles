@@ -12,6 +12,7 @@ export const getSettings = unstable_cache(
     }
     return settings;
   },
-  ["settings"],
+  // Bump the version when Settings gains fields, so old cached rows are never used.
+  ["settings", "v2"],
   { tags: [TAGS.settings] },
 );

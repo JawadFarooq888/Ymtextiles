@@ -4,20 +4,31 @@ import { phoneSchema, ukPostcodeSchema } from "@/lib/uk";
 
 export const productWhatsAppOrderSchema = basketLineSchema;
 
-/** Shared by the basket WhatsApp form (client) and the server action. */
-export const whatsappCustomerSchema = z.object({
-  name: z.string().trim().min(2, "Please enter your name").max(80),
-  phone: phoneSchema,
-  postcode: ukPostcodeSchema,
-  note: z
-    .string()
-    .trim()
-    .max(300, "Please keep the note under 300 characters")
-    .transform((v) => (v === "" ? null : v)),
-});
+const anyLocation = z
+  .string()
+  .trim()
+  .min(2, "Please enter your postcode or town")
+  .max(60, "Please keep this under 60 characters");
 
-export type WhatsAppCustomerFormValues = z.input<typeof whatsappCustomerSchema>;
+/**
+ * Basket WhatsApp form (client) and server action. With `ukOnly` (Admin → Settings)
+ * a valid UK postcode is required; otherwise any postcode or town is accepted.
+ */
+export function whatsappCustomerSchema(ukOnly: boolean) {
+  return z.object({
+    name: z.string().trim().min(2, "Please enter your name").max(80),
+    phone: phoneSchema,
+    postcode: ukOnly ? ukPostcodeSchema : anyLocation,
+    note: z
+      .string()
+      .trim()
+      .max(300, "Please keep the note under 300 characters")
+      .transform((v) => (v === "" ? null : v)),
+  });
+}
 
-export const basketWhatsAppOrderSchema = whatsappCustomerSchema.extend({
-  lines: basketLinesSchema,
-});
+export type WhatsAppCustomerFormValues = z.input<ReturnType<typeof whatsappCustomerSchema>>;
+
+export function basketWhatsAppOrderSchema(ukOnly: boolean) {
+  return whatsappCustomerSchema(ukOnly).extend({ lines: basketLinesSchema });
+}

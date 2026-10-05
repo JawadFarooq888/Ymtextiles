@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAdmin();
+  const isAdmin = user.role === "ADMIN";
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[240px_1fr]">
@@ -22,11 +23,11 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         <Link href="/admin" className="mb-6 block px-3 font-heading text-2xl tracking-wide">
           YM TEXTILES
         </Link>
-        <AdminNav />
+        <AdminNav isAdmin={isAdmin} />
       </aside>
       <div className="min-w-0">
         <header className="flex h-14 items-center gap-2 border-b bg-card px-4">
-          <MobileNav />
+          <MobileNav isAdmin={isAdmin} />
           <span className="font-heading text-xl tracking-wide lg:hidden">YM TEXTILES</span>
           <div className="ml-auto flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
@@ -34,7 +35,12 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 <ExternalLinkIcon /> <span className="hidden sm:inline">View shop</span>
               </Link>
             </Button>
-            <span className="hidden text-sm text-muted-foreground md:inline">{user.email}</span>
+            <Link
+              href="/admin/account"
+              className="hidden text-sm text-muted-foreground hover:text-primary hover:underline md:inline"
+            >
+              {user.email}
+            </Link>
             <form action={logoutAction}>
               <Button type="submit" variant="outline" size="sm">
                 <LogOutIcon /> Sign out

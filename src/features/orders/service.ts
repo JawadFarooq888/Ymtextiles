@@ -7,6 +7,9 @@ import { WHATSAPP_ORDER_EXPIRY_HOURS, canTransition } from "@/features/orders/st
 
 type Tx = Prisma.TransactionClient;
 
+// Stock changes run in transactions; allow for a slow or just-woken database.
+const TX_OPTIONS = { timeout: 20_000, maxWait: 10_000 } as const;
+
 export interface NewOrderInput {
   channel: OrderChannel;
   status: OrderStatus;
@@ -112,7 +115,7 @@ export async function confirmWhatsAppOrder(orderId: string) {
     });
     if (moved.count === 0) throw new UserError("This order is no longer awaiting confirmation.");
     await deductStock(tx, orderId);
-  });
+  }, TX_OPTIONS);
 }
 
 /** Cancel an order, returning stock if it had been deducted. */
@@ -128,7 +131,7 @@ export async function cancelOrder(orderId: string) {
       where: { id: orderId },
       data: { status: "CANCELLED", cancelledAt: new Date() },
     });
-  });
+  }, TX_OPTIONS);
 }
 
 /** Generic admin status change (shipping, delivered, refunded...). */

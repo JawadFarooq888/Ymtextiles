@@ -11,7 +11,13 @@ import type { BasketQuote } from "@/features/basket/service";
 import { quoteBasketAction } from "@/features/whatsapp/actions";
 import { formatPence } from "@/lib/money";
 
-export function BasketView({ delivery }: { delivery: DeliverySettings }) {
+export function BasketView({
+  delivery,
+  whatsappUkOnly,
+}: {
+  delivery: DeliverySettings;
+  whatsappUkOnly: boolean;
+}) {
   const hydrated = useHydrated();
   const lines = useBasket((s) => s.lines);
   const sync = useBasket((s) => s.sync);
@@ -119,7 +125,7 @@ export function BasketView({ delivery }: { delivery: DeliverySettings }) {
         ) : null}
         <div className="mt-6 grid gap-3">
           <CheckoutButton disabled={hasProblems || !quote} />
-          <WhatsAppBasketDialog disabled={hasProblems || !quote} />
+          <WhatsAppBasketDialog disabled={hasProblems || !quote} ukOnly={whatsappUkOnly} />
         </div>
       </aside>
     </div>

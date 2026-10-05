@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AdminNav } from "@/features/admin/components/admin-nav";
 
-export function MobileNav() {
+export function MobileNav({ isAdmin = true }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -19,7 +19,7 @@ export function MobileNav() {
         <SheetHeader className="px-0">
           <SheetTitle className="font-heading text-xl tracking-wide">YM TEXTILES</SheetTitle>
         </SheetHeader>
-        <AdminNav onNavigate={() => setOpen(false)} />
+        <AdminNav isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

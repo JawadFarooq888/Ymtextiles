@@ -25,7 +25,13 @@ import {
   type WhatsAppCustomerFormValues,
 } from "@/features/whatsapp/schema";
 
-export function WhatsAppBasketDialog({ disabled }: { disabled?: boolean }) {
+export function WhatsAppBasketDialog({
+  disabled,
+  ukOnly,
+}: {
+  disabled?: boolean;
+  ukOnly: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const lines = useBasket((s) => s.lines);
@@ -33,9 +39,9 @@ export function WhatsAppBasketDialog({ disabled }: { disabled?: boolean }) {
   const { register, handleSubmit, formState, getValues } = useForm<
     WhatsAppCustomerFormValues,
     unknown,
-    z.output<typeof whatsappCustomerSchema>
+    z.output<ReturnType<typeof whatsappCustomerSchema>>
   >({
-    resolver: zodResolver(whatsappCustomerSchema),
+    resolver: zodResolver(whatsappCustomerSchema(ukOnly)),
     defaultValues: { name: "", phone: "", postcode: "", note: "" },
   });
   const errors = formState.errors;
@@ -103,11 +109,15 @@ export function WhatsAppBasketDialog({ disabled }: { disabled?: boolean }) {
               {...errorProps("wa-phone", errors.phone?.message)}
             />
           </Field>
-          <Field label="Postcode" htmlFor="wa-postcode" error={errors.postcode?.message}>
+          <Field
+            label={ukOnly ? "Postcode" : "Postcode or town"}
+            htmlFor="wa-postcode"
+            error={errors.postcode?.message}
+          >
             <Input
               id="wa-postcode"
               autoComplete="postal-code"
-              className="h-11 uppercase"
+              className={ukOnly ? "h-11 uppercase" : "h-11"}
               {...register("postcode")}
               {...errorProps("wa-postcode", errors.postcode?.message)}
             />

@@ -8,6 +8,7 @@
  */
 import { PrismaClient, ProductType, BannerPlacement, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { SYSTEM_PAGES } from "../src/features/content/defaults";
 
 const db = new PrismaClient();
 
@@ -414,6 +415,21 @@ async function main() {
           sortOrder: 1,
         },
       ],
+    });
+  }
+
+  // Information pages (create only; never overwrite the owner's edits)
+  for (const page of SYSTEM_PAGES) {
+    await db.page.upsert({
+      where: { slug: page.slug },
+      update: {},
+      create: {
+        slug: page.slug,
+        title: page.title,
+        body: page.body,
+        metaDescription: page.metaDescription,
+        sortOrder: page.sortOrder,
+      },
     });
   }
 

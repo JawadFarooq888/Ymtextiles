@@ -5,7 +5,8 @@ import { buildMenu } from "@/features/catalog/collections";
 import { getActiveBanners, getCategoryTree } from "@/features/catalog/queries";
 import { MegaMenu } from "@/features/layout/mega-menu";
 import { MobileMenu } from "@/features/layout/mobile-menu";
-import { HELP_LINKS } from "@/features/layout/links";
+import { helpPageLinks } from "@/features/layout/links";
+import { getPageLinks } from "@/features/content/queries";
 import { getSettings } from "@/lib/settings";
 
 async function AnnouncementBar() {
@@ -31,8 +32,17 @@ async function AnnouncementBar() {
 }
 
 export async function SiteHeader() {
-  const tree = await getCategoryTree();
-  const menu = buildMenu(tree);
+  const [tree, settings, pages] = await Promise.all([
+    getCategoryTree(),
+    getSettings(),
+    getPageLinks(),
+  ]);
+  const menu = buildMenu(tree, {
+    showNewIn: settings.menuShowNewIn,
+    showLawn: settings.menuShowLawn,
+    showSale: settings.menuShowSale,
+  });
+  const helpLinks = helpPageLinks(pages);
 
   return (
     <>
@@ -47,7 +57,7 @@ export async function SiteHeader() {
         <div className="relative mx-auto max-w-7xl px-4">
           <div className="grid h-16 grid-cols-[1fr_auto_1fr] items-center">
             <div className="flex items-center">
-              <MobileMenu items={menu} helpLinks={HELP_LINKS} />
+              <MobileMenu items={menu} helpLinks={helpLinks} />
             </div>
             <Link
               href="/"

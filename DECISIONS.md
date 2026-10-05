@@ -110,3 +110,18 @@ Audited with axe-core (WCAG 2.1 AA) at 375px, using the accessibility tree and k
 - **Tests**: `tests/e2e/accessibility.spec.ts` covers axe checks on key pages (no serious or critical issues), one `h1` and `main` per page, named groups, skip link, mobile menu focus trap and return, buying with the keyboard only, the early-click alert, and form errors that move focus and are linked to their fields.
 - **Static pages** use ISR (`revalidate = 3600`) instead of `dynamicParams = false`, so a page that failed to prerender during a slow build is rendered on request rather than returning 404.
 - **Playwright runs with one worker** and longer timeouts, because the Neon free tier has few connections and wakes slowly.
+
+## Admin controls everything
+
+- **Pages** (Admin → Pages): About, Delivery & Returns, Contact, Size Guide, Privacy, Terms and Cookie Policy are stored in the `Page` table and edited in admin with a live preview. Admins can also add new pages, which appear in the footer. Built-in pages can be hidden but not deleted, and their address can't change, because links point to them. Text uses a small safe format (`## heading`, `- list`, `**bold**`, `[link](url)`): no HTML is interpreted, so pasted content can't inject scripts. Live facts (fees, returns days, dispatch info, WhatsApp/email/address, size tables) are added by the page itself from Settings, so they never go out of date.
+- **Settings** gained:
+  - WhatsApp "UK customers only" switch: off = any postcode or town on basket WhatsApp orders. Card checkout stays UK-only.
+  - Dispatch/delivery time text.
+  - Footer tagline.
+  - The four "Why YM Textiles" points.
+  - Google title and description (used as site-wide metadata).
+  - Header menu switches for New In, Lawn and Sale.
+- **Users** (Admin → Users, admins only): add admin/staff logins, change roles, reset passwords, remove access. You can't remove or demote yourself, and the last admin can't be removed. Everyone can change their own password under My account (click your email in the header). Staff don't see Settings or Users.
+- **Newsletter** (Admin → Newsletter): list, search, unsubscribe/resubscribe, permanently delete (GDPR erasure), and export active subscribers as CSV.
+- **Settings cache key is versioned** (`["settings","v2"]`). Vercel's data cache survives deploys, so when Settings gains columns, bump the version or the old cached row (without the new fields) would be served.
+- **Stock transactions** allow 20 seconds, so a just-woken Neon database or a slow connection doesn't abort confirmations or cancellations.

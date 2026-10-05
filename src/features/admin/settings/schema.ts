@@ -39,6 +39,22 @@ export const settingsSchema = z.object({
   businessAddress: optionalText(300),
   returnsDays: intFromString(0, 365),
   lowStockThreshold: intFromString(0, 1000),
+  whatsappUkOnly: z.boolean(),
+  dispatchInfo: optionalText(200),
+  footerTagline: z.string().trim().min(1, "Required").max(200),
+  seoTitle: z.string().trim().min(1, "Required").max(70, "Keep it under 70 characters"),
+  seoDescription: z.string().trim().min(1, "Required").max(160, "Keep it under 160 characters"),
+  menuShowNewIn: z.boolean(),
+  menuShowLawn: z.boolean(),
+  menuShowSale: z.boolean(),
+  whyUs: z
+    .array(
+      z.object({
+        title: z.string().trim().min(1, "Required").max(40),
+        text: z.string().trim().min(1, "Required").max(140),
+      }),
+    )
+    .length(4),
 });
 
 export type SettingsFormValues = z.input<typeof settingsSchema>;

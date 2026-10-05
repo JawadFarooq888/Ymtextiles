@@ -78,12 +78,12 @@ export async function createWhatsAppOrder(
 export async function createWhatsAppBasketOrder(
   input: unknown,
 ): Promise<ActionResult<WhatsAppOrderResult>> {
-  const parsed = basketWhatsAppOrderSchema.safeParse(input);
+  const settings = await getSettings();
+  const parsed = basketWhatsAppOrderSchema(settings.whatsappUkOnly).safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
   if (!(await checkRateLimit("whatsapp-order", 10, "10 m"))) return fail(RATE_LIMIT_MESSAGE);
 
   try {
-    const settings = await getSettings();
     const quote = await quoteBasket(parsed.data.lines, settings, "standard");
     if (!quote.ok) {
       return fail(

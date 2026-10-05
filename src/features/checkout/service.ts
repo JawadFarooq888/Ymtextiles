@@ -144,7 +144,7 @@ export async function handleCheckoutPaid(
   if (transitioned.count === 0) return "ignored";
 
   try {
-    await db.$transaction((tx) => deductStock(tx, orderId));
+    await db.$transaction((tx) => deductStock(tx, orderId), { timeout: 20_000, maxWait: 10_000 });
   } catch (error) {
     // Payment is taken, so keep the order PAID and flag it for the owner.
     const reason = error instanceof UserError ? error.message : "stock update failed";

@@ -28,6 +28,10 @@ Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS + shadcn/ui, Prisma + N
 - Sign in at `/admin` with the admin account created by `npm run db:seed` (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`).
 - To add another admin or staff login: `npm run admin:create -- someone@example.com "a-strong-password" STAFF`
 - **Products**: create or edit a product, upload photos (drag to reorder), then under _Sizes, colours and stock_ tick sizes and colours and click **Generate variants**. Set the stock for each row and save.
+- **Pages** (About, Delivery & Returns, policies...): _Pages_. Edit the text with the live preview, or add new pages.
+- **Home page text, footer tagline, menu items, Google title/description, dispatch times**: _Settings_.
+- **Staff logins**: _Users_ (admins only). Change your own password by clicking your email at the top right.
+- **Newsletter**: _Newsletter_ → Export CSV.
 - **Bulk changes**: _Products → Export CSV_, edit the file in Excel or Google Sheets, then _Import CSV_.
 - **WhatsApp number, delivery fees, free delivery threshold**: _Settings_.
 

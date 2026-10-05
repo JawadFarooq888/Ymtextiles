@@ -108,3 +108,23 @@ describe("order status transitions", () => {
     expect(canTransition("CANCELLED", "PROCESSING")).toBe(false);
   });
 });
+
+import { whatsappCustomerSchema } from "@/features/whatsapp/schema";
+
+describe("WhatsApp basket form rules (Admin → Settings → UK customers only)", () => {
+  const base = { name: "Aisha", phone: "+92 300 1234567", note: "" };
+  it("requires a UK postcode when UK-only is on", () => {
+    expect(whatsappCustomerSchema(true).safeParse({ ...base, postcode: "4739186" }).success).toBe(
+      false,
+    );
+    expect(
+      whatsappCustomerSchema(true).safeParse({ ...base, postcode: "sw1a1aa" }).data?.postcode,
+    ).toBe("SW1A 1AA");
+  });
+  it("accepts any postcode or town when UK-only is off", () => {
+    expect(
+      whatsappCustomerSchema(false).safeParse({ ...base, postcode: "Lahore 54000" }).data?.postcode,
+    ).toBe("Lahore 54000");
+    expect(whatsappCustomerSchema(false).safeParse({ ...base, postcode: "" }).success).toBe(false);
+  });
+});
