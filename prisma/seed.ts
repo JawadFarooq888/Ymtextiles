@@ -341,7 +341,7 @@ async function main() {
         slug: p.slug,
         sku: p.sku,
         description:
-          "<p>This is a sample product created by the seed script. Replace the name, description, photos, price and stock from the admin panel.</p>",
+          "This is a sample product created by the seed script. Replace the name, description, photos, price and stock from the admin panel.",
         careDetails: "Sample care details: gentle hand wash in cold water. Do not bleach.",
         fabric: p.fabric,
         pieces: p.pieces,

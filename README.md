@@ -23,4 +23,19 @@ Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS + shadcn/ui, Prisma + N
 | `npm run db:deploy`                     | Apply migrations (production)                       |
 | `npm run db:seed`                       | Seed sample data                                    |
 
+## Admin panel
+
+- Sign in at `/admin` with the admin account created by `npm run db:seed` (`SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`).
+- To add another admin or staff login: `npm run admin:create -- someone@example.com "a-strong-password" STAFF`
+- **Products**: create or edit a product, upload photos (drag to reorder), then under _Sizes, colours and stock_ tick sizes and colours and click **Generate variants**. Set the stock for each row and save.
+- **Bulk changes**: _Products → Export CSV_, edit the file in Excel or Google Sheets, then _Import CSV_.
+- **WhatsApp number, delivery fees, free delivery threshold**: _Settings_.
+
+## Tests
+
+```bash
+npm run build
+npm run test:e2e   # starts the production server on port 3123 and runs Playwright
+```
+
 More documentation (adding products, changing the WhatsApp number, deployment) will be added in Phase 8.

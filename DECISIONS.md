@@ -27,3 +27,20 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Seed product images are omitted** until Cloudinary is configured. The shop will show a branded placeholder.
 - The seed is idempotent: it upserts by unique keys and never overwrites edits the owner makes later.
 - **Prisma migrations against Neon**: `prisma migrate dev` can hang in non-interactive shells. Create migrations with `--create-only` and apply them with `prisma migrate deploy`.
+
+## Phase 3: Admin panel
+
+- **Auth.js v5 (beta)** with a Credentials provider and **JWT sessions** (12 hours). There is no database session adapter, because admin login is email + password only. The Auth.js tables stay in the schema for optional customer accounts later.
+- **Two-layer protection**: middleware (edge-safe `auth.config.ts`) blocks `/admin/*`, and every admin page and server action also calls `requireAdmin()` on the server. Settings can only be changed by `ADMIN`, not `STAFF`.
+- **`trustHost: true`** in the Auth.js config. Vercel and `next start` both send a correct Host header. Without it, Auth.js refuses to run outside Vercel.
+- **Login timing**: a dummy bcrypt comparison runs for unknown emails, so response time doesn't reveal which emails exist.
+- **Login rate limiting** is deferred to Phase 7, together with the other Upstash rate limits.
+- **Image uploads go directly from the browser to Cloudinary** using a server-signed request (`getUploadSignature`). Files never pass through Vercel, which avoids its 4.5 MB request limit. Images are stored under `ym-textiles/{products,categories,banners}`. Deleting a product, or removing an image from it, also deletes the file from Cloudinary.
+- **Product description is plain text**, not rich text, shown with line breaks preserved. A WYSIWYG editor adds weight and needs HTML sanitising. It can be added later if the owner needs formatting.
+- **One save for the whole product**: product fields, images (order, alt text, colour) and variants are saved together in one database transaction.
+- **Variant SKUs** are generated as `PRODUCTSKU-SIZE-COLOUR` using 3-letter codes (e.g. `YM-LWN-001-M-GRN`), and they stay editable.
+- **CSV import** uses one row per variant and never deletes anything. Products are matched by `product_sku` and variants by size + colour. Blank cells keep the current values. Unknown sizes and colours are created automatically. Each product is saved in its own transaction, so one bad row doesn't block the rest. Image URLs must be Cloudinary links and are only added to products with no photos. Limit: 5,000 rows / 4 MB (the server-action body limit is raised to 5 MB).
+- **CSV export** includes a UTF-8 BOM so Excel shows £ and other symbols correctly.
+- **Interim shop product page** at `/products/[slug]`, used to verify "add a product and see it on the shop". Phase 4 replaces it with the full design.
+- **`scripts/create-admin.ts`** (`npm run admin:create -- email "password" [ADMIN|STAFF]`) adds or updates logins without re-running the seed.
+- **Playwright** e2e tests run against a production build (`npm run build && npm run test:e2e`). They use `E2E_ADMIN_*` or `SEED_ADMIN_*` credentials, and they clean up after themselves (product and Cloudinary image).
