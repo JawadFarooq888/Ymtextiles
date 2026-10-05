@@ -88,3 +88,10 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Cancel** returns to `/basket` with the basket intact. The basket is only cleared on the success page.
 - **Deployment**: `vercel-build` runs `prisma generate && prisma migrate deploy && next build`, so production migrations apply on each deploy (uses `DIRECT_URL`).
 - **Neon free tier sleeps when idle**: `DATABASE_URL` also gets `&pool_timeout=30` so the first request after a sleep doesn't time out.
+
+## Deployment (Vercel)
+
+- **Production** runs at https://www.ymtextiles.com (the bare domain `ymtextiles.com` redirects to `www`), hosted on Vercel with the GitHub repo `JawadFarooq888/Ymtextiles` (branch `main` auto-deploys).
+- **Stock imagery**: hero banners and category tiles use free Unsplash fabric photos (see `docs/IMAGE_CREDITS.md`). We use fabric-only images, not photos of people (no model releases) and not other brands' garments. Product photos stay as the "Photo coming soon" placeholder until the owner uploads real photos.
+- **Announcement text** avoids mentioning card payment until Stripe keys are live.
+- **`POST /api/revalidate`** (Bearer `CRON_SECRET`) refreshes shop caches after changes made outside the admin panel.
