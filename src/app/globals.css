@@ -13,6 +13,7 @@
   --color-brand-ivory: var(--brand-ivory);
   --color-brand-sand: var(--brand-sand);
   --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-dark: var(--brand-gold-dark);
   --color-brand-ink: var(--brand-ink);
   --color-brand-body: var(--brand-body);
   --color-brand-sale: var(--brand-sale);
@@ -60,6 +61,8 @@
   --brand-ivory: #fbf8f2;
   --brand-sand: #f2eadb;
   --brand-gold: #b8862e;
+  /* Darker gold for small text: passes WCAG AA (about 5:1) on ivory */
+  --brand-gold-dark: #8a6421;
   --brand-ink: #16332a;
   --brand-body: #4a5651;
   --brand-sale: #a3412f;
@@ -113,5 +116,34 @@
   h3,
   h4 {
     @apply font-heading text-brand-ink;
+  }
+}
+
+/* Long-form content (static pages). Elements inside .not-prose keep their own styles. */
+@layer components {
+  .prose-ym {
+    line-height: 1.75;
+  }
+  .prose-ym > * + * {
+    margin-top: 1rem;
+  }
+  .prose-ym :where(h2):not(:where(.not-prose *)) {
+    margin-top: 2.25rem;
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--brand-ink);
+  }
+  .prose-ym :where(ul):not(:where(.not-prose *)) {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+  .prose-ym :where(li + li):not(:where(.not-prose *)) {
+    margin-top: 0.35rem;
+  }
+  .prose-ym :where(a):not(:where(.not-prose *)) {
+    color: var(--brand-green);
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 }

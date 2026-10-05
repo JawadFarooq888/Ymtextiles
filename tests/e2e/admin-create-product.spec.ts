@@ -79,7 +79,8 @@ test("admin creates a product and it appears in the shop", async ({ page }) => {
   await page.goto(`/products/${slug}`);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByText("£49.99")).toBeVisible();
-  await expect(page.getByText("M, L")).toBeVisible();
+  await expect(page.getByRole("button", { name: "M", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "L", exact: true })).toBeVisible();
   await expect(page.getByRole("img", { name: name })).toBeVisible();
 
   // Clean up

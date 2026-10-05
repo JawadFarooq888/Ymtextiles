@@ -44,3 +44,19 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Interim shop product page** at `/products/[slug]`, used to verify "add a product and see it on the shop". Phase 4 replaces it with the full design.
 - **`scripts/create-admin.ts`** (`npm run admin:create -- email "password" [ADMIN|STAFF]`) adds or updates logins without re-running the seed.
 - **Playwright** e2e tests run against a production build (`npm run build && npm run test:e2e`). They use `E2E_ADMIN_*` or `SEED_ADMIN_*` credentials, and they clean up after themselves (product and Cloudinary image).
+
+## Phase 4: Shop front
+
+- **One cached catalogue index**: all active products, with their card data and variant `[size, colour, stock]` tuples, are loaded in a single `unstable_cache` entry tagged `catalog`. Collection filtering, facet options, sorting and pagination run in memory on that index. This is fast for a few thousand products and lets sorting by effective (sale) price work without raw SQL. One `revalidateTag` refreshes every listing after an admin edit. Revisit this above roughly 3,000 products (the cache entry limit is about 2 MB).
+- **Virtual collections** under `/collections/...`: `new-in` (`isNew`), `lawn` (fabric = Lawn), `sale` (has `salePrice`), `best-sellers` and `all`. Category collections include their sub-categories' products.
+- **Menu order**: New In, then the top-level categories in their admin sort order (sub-categories in the mega menu), then Lawn and Sale.
+- **Filters** live in URL search params (`size`, `colour`, `fabric`, `pieces`, `type`, `min`, `max`, `instock`, `sort`, `page`), so links can be shared. Size and colour filters only match variants that are in stock.
+- **Pagination**: numbered pages of 24 products. Plain links are better for SEO and the back button than "Load more".
+- **Search**: Postgres full-text search with prefix matching (`embro` finds "embroidered"). It weights name, then fabric and tags, then category, then description. It computes the tsvector per query instead of storing a generated column with a GIN index. That's fine at this catalogue size, and Prisma would otherwise report schema drift.
+- **Product gallery**: scroll-snap swipe on mobile, thumbnails on desktop, click to open a large zoomable image. When a colour is chosen and images are linked to it, the gallery shows that colour's images plus untagged ones.
+- **Variant selector**: options that are out of stock (given the other selection) are shown crossed out / "Sold out" and disabled. A single size or colour (e.g. "Unstitched") is pre-selected. Quantity is capped at the variant's stock (max 10 per line).
+- **Price shown**: the variant's price override, otherwise the sale price, otherwise the regular price.
+- **Accessibility**: added `--brand-gold-dark` (#8A6421) for small gold text, because the spec's #B8862E is about 3:1 on ivory and fails WCAG AA. Bright gold is kept for large and decorative use. Footer column titles use sand on green for the same reason. Touch targets are at least 44px, there's a skip link, filter chips use `aria-pressed`, and the carousel has pause/next/previous controls and respects reduced motion.
+- **Static pages** are code (`features/content/pages.tsx`). They use live Settings values (fees, returns days, WhatsApp, email). Anything not known yet is marked `[TO BE REVIEWED BY OWNER]` or `[TO BE CONFIRMED BY OWNER]`. Returns wording sticks to the statutory 14-day right to cancel, with no invented conditions.
+- **The home page is static** (prerendered) and refreshes through tag revalidation. Collection, product and search pages render per request from cached data.
+- **Neon + Prisma**: the pooled `DATABASE_URL` should include `&pgbouncer=true&connect_timeout=15` (documented in `.env.example`).
