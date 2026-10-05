@@ -32,7 +32,15 @@ function toCm(inches: number) {
   return Math.round(inches * 2.54 * 2) / 2;
 }
 
-export function SizeChartTable({ rows, notes }: { rows: SizeChartRow[]; notes?: string | null }) {
+export function SizeChartTable({
+  rows,
+  notes,
+  name = "Size chart",
+}: {
+  rows: SizeChartRow[];
+  notes?: string | null;
+  name?: string;
+}) {
   const [unit, setUnit] = useState<"in" | "cm">("in");
   return (
     <div className="grid gap-3">
@@ -61,7 +69,7 @@ export function SizeChartTable({ rows, notes }: { rows: SizeChartRow[]; notes?: 
         className="overflow-x-auto rounded-xl border focus-visible:outline-2 focus-visible:outline-primary"
         tabIndex={0}
         role="region"
-        aria-label="Size chart measurements, scroll sideways for more"
+        aria-label={`${name} measurements, scroll sideways for more`}
       >
         <table className="w-full min-w-[420px] text-sm">
           <caption className="sr-only">
@@ -124,7 +132,7 @@ export function SizeChartDialog({
           <DialogTitle className="font-heading text-2xl">{name}</DialogTitle>
           <DialogDescription>Garment measurements for each size.</DialogDescription>
         </DialogHeader>
-        <SizeChartTable rows={rows} notes={notes} />
+        <SizeChartTable rows={rows} notes={notes} name={name} />
       </DialogContent>
     </Dialog>
   );

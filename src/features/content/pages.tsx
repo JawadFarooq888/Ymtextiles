@@ -60,7 +60,7 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
             <section key={chart.id}>
               <h2>{chart.name}</h2>
               <div className="not-prose">
-                <SizeChartTable rows={rows.data} notes={chart.notes} />
+                <SizeChartTable rows={rows.data} notes={chart.notes} name={chart.name} />
               </div>
             </section>
           ) : null;
