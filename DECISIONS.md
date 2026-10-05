@@ -60,3 +60,18 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Static pages** are code (`features/content/pages.tsx`). They use live Settings values (fees, returns days, WhatsApp, email). Anything not known yet is marked `[TO BE REVIEWED BY OWNER]` or `[TO BE CONFIRMED BY OWNER]`. Returns wording sticks to the statutory 14-day right to cancel, with no invented conditions.
 - **The home page is static** (prerendered) and refreshes through tag revalidation. Collection, product and search pages render per request from cached data.
 - **Neon + Prisma**: the pooled `DATABASE_URL` should include `&pgbouncer=true&connect_timeout=15` (documented in `.env.example`).
+
+## Phase 5: Basket and WhatsApp ordering
+
+- **Basket store**: Zustand, persisted to `localStorage` (`ym-basket`). It holds only display data. Every order, and the basket page itself, re-reads prices and stock from the database (`quoteBasket`), never trusting browser prices. The basket page syncs the browser's prices and stock limits from that quote.
+- **Product-page WhatsApp orders** cover one item and leave delivery to be agreed on WhatsApp (delivery fee £0 on the order), so the order total matches the spec's message format. Basket WhatsApp orders include the standard delivery fee (free over the threshold).
+- **WhatsApp message**: `buildWhatsAppMessage(order, settings, siteUrl)` is a pure function. The single-item format is exactly as specified. Baskets list every line. If the wa.me URL would exceed 2,000 characters, it sends a short message with the order ref, item count, total and the private `/order/[token]` link.
+- **Opening WhatsApp**: on desktop an empty tab is opened inside the click and pointed at wa.me once the order exists, because pop-up blockers stop tabs opened after an `await`. On touch devices the current tab navigates to wa.me, which hands over to the WhatsApp app.
+- **"Order on WhatsApp" / "Add to basket"** look disabled (`aria-disabled`) until a size and colour are chosen, but stay clickable so they can show "Please select a size and colour", as the spec requires.
+- **Stock** is reduced only when a WhatsApp order is confirmed in admin (or, in Phase 6, when Stripe payment succeeds). `deductStock` is idempotent (it claims `stockDeductedAt` first) and uses conditional updates (`stock >= qty`), so stock never goes negative. Cancelling an order that had stock deducted puts the stock back. Refunds do not restock automatically, because items may not come back.
+- **Admin status changes** follow a transition table (`features/orders/status.ts`). Cancelling a paid website order does not refund the card: the admin is told to refund in Stripe.
+- **Cron**: `vercel.json` runs `/api/cron/expire-whatsapp-orders` daily at 03:00 UTC (Vercel Hobby only allows daily crons), so unconfirmed WhatsApp orders are cancelled 72–96 hours after creation. Hourly is possible on Vercel Pro. The endpoint requires `Authorization: Bearer $CRON_SECRET` (constant-time compare).
+- **Vercel region** is `lhr1` (London), next to the Neon database in eu-west-2.
+- **Rate limiting** (Upstash sliding window: 10 WhatsApp orders per 10 minutes per IP) is wired in. It allows everything when Upstash isn't configured or is unreachable, so a Redis outage never blocks orders.
+- **Phone numbers** are stored in international digits (`447123456789`) so "Message customer" can open WhatsApp directly. UK formats (07…, +44, 0044) and other countries with `+` are accepted. Postcodes are normalised to `SW1A 1AA` form.
+- **Vitest** unit tests cover money, delivery fees, the WhatsApp message and URL builders (encoding, £, line breaks, long baskets), postcode and phone validation, variant availability, SKUs and status transitions.

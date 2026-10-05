@@ -6,7 +6,9 @@ import { ChevronDownIcon } from "lucide-react";
 import { Breadcrumbs } from "@/features/catalog/components/breadcrumbs";
 import { ProductGrid } from "@/features/catalog/components/product-card";
 import { getCatalogIndex, getProductBySlug } from "@/features/catalog/queries";
-import { ProductView } from "@/features/product/components/product-view";
+import { ProductPurchase } from "@/features/product/components/product-purchase";
+import { SetFloatingWhatsAppMessage } from "@/features/whatsapp/floating-whatsapp";
+import { getSiteUrl } from "@/lib/site";
 import { SizeChartDialog } from "@/features/product/components/size-chart-dialog";
 import { formatPence } from "@/lib/money";
 import { getSettings } from "@/lib/settings";
@@ -90,11 +92,14 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
+      <SetFloatingWhatsAppMessage
+        message={`Hi, I have a question about ${product.name} (${getSiteUrl()}/products/${product.slug})`}
+      />
       <div className="mb-4">
         <Breadcrumbs items={crumbs} />
       </div>
 
-      <ProductView
+      <ProductPurchase
         product={{
           id: product.id,
           name: product.name,
@@ -103,6 +108,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           salePrice: product.salePrice,
           images: product.images,
           variants: product.variants,
+          image: product.images[0]?.url ?? null,
         }}
         lowStockThreshold={settings.lowStockThreshold}
         header={
@@ -171,7 +177,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             </Link>
           </Accordion>
         </div>
-      </ProductView>
+      </ProductPurchase>
 
       {related.length ? (
         <section className="mt-20" aria-labelledby="related">

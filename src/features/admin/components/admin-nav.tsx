@@ -7,6 +7,7 @@ import {
   ImageIcon,
   LayoutDashboardIcon,
   PaletteIcon,
+  ReceiptIcon,
   RulerIcon,
   SettingsIcon,
   ShirtIcon,
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboardIcon, exact: true },
+  { href: "/admin/orders", label: "Orders", icon: ReceiptIcon },
   { href: "/admin/products", label: "Products", icon: ShirtIcon },
   { href: "/admin/categories", label: "Categories", icon: FolderTreeIcon },
   { href: "/admin/attributes", label: "Sizes & colours", icon: PaletteIcon },

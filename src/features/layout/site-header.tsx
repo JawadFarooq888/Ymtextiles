@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { SearchIcon, ShoppingBagIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
+import { BasketButton } from "@/features/basket/components/basket-button";
 import { buildMenu } from "@/features/catalog/collections";
 import { getActiveBanners, getCategoryTree } from "@/features/catalog/queries";
 import { MegaMenu } from "@/features/layout/mega-menu";
@@ -59,13 +60,7 @@ export async function SiteHeader() {
               >
                 <SearchIcon className="size-5" />
               </Link>
-              <Link
-                href="/basket"
-                aria-label="Basket"
-                className="flex size-11 items-center justify-center rounded-full text-brand-ink hover:bg-secondary"
-              >
-                <ShoppingBagIcon className="size-5" />
-              </Link>
+              <BasketButton />
             </div>
           </div>
           <MegaMenu items={menu} />

@@ -34,6 +34,7 @@ Stack: Next.js 15 (App Router), TypeScript, Tailwind CSS + shadcn/ui, Prisma + N
 ## Tests
 
 ```bash
+npm test           # unit tests (Vitest)
 npm run build
 npm run test:e2e   # starts the production server on port 3123 and runs Playwright
 ```

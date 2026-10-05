@@ -54,7 +54,12 @@ export default async function AdminDashboardPage() {
                 {data.pendingWhatsApp.map((o) => (
                   <li key={o.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <div>
-                      <p className="font-medium text-brand-ink">{o.orderNumber}</p>
+                      <Link
+                        href={`/admin/orders/${o.id}`}
+                        className="font-medium text-brand-ink hover:underline"
+                      >
+                        {o.orderNumber}
+                      </Link>
                       <p className="text-xs text-muted-foreground">
                         {o.customerName ?? "Customer"} · {formatLondonDateTime(o.createdAt)}
                       </p>
