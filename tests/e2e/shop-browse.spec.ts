@@ -78,7 +78,7 @@ test("product page: selecting colour and size shows stock and blocks sold-out si
 
 test("search finds products by partial word", async ({ page }) => {
   await page.goto("/search?q=embro");
-  await expect(page.getByText(/result/)).toBeVisible();
+  await expect(page.getByText(/results? for/)).toBeVisible();
   await expect(page.getByRole("article").first()).toBeVisible();
 });
 

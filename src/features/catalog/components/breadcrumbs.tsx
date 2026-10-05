@@ -14,7 +14,10 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
           <li key={`${c.name}-${i}`} className="flex items-center gap-1">
             {i > 0 ? <ChevronRightIcon className="size-3" aria-hidden /> : null}
             {c.href ? (
-              <Link href={c.href} className="hover:text-primary hover:underline">
+              <Link
+                href={c.href}
+                className="inline-flex min-h-6 items-center hover:text-primary hover:underline"
+              >
                 {c.name}
               </Link>
             ) : (

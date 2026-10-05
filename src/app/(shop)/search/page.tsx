@@ -46,7 +46,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       </form>
 
       {q ? (
-        <section className="mt-10" aria-live="polite">
+        <section className="mt-10" aria-live="polite" aria-labelledby="results-heading">
+          <h2 id="results-heading" className="sr-only">
+            Search results
+          </h2>
           <p className="mb-6 text-sm">
             {results.length} result{results.length === 1 ? "" : "s"} for{" "}
             <span className="font-medium text-brand-ink">&ldquo;{q}&rdquo;</span>

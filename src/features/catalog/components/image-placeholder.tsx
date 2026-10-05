@@ -1,11 +1,20 @@
 import { cn } from "@/lib/utils";
 
 /** Branded stand-in shown when a product has no photo yet. */
-export function ImagePlaceholder({ className, label }: { className?: string; label?: string }) {
+export function ImagePlaceholder({
+  className,
+  label,
+  decorative = false,
+}: {
+  className?: string;
+  label?: string;
+  decorative?: boolean;
+}) {
   return (
     <div
-      role="img"
-      aria-label={label ?? "Photo coming soon"}
+      {...(decorative
+        ? { "aria-hidden": true }
+        : { role: "img", "aria-label": label ?? "Photo coming soon" })}
       className={cn(
         "flex h-full w-full flex-col items-center justify-center gap-1 bg-secondary text-brand-gold-dark",
         className,

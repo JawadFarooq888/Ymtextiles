@@ -11,7 +11,9 @@ export function generateStaticParams() {
   return Object.keys(CONTENT_PAGES).map((slug) => ({ slug }));
 }
 
-export const dynamicParams = false;
+// Unknown slugs 404 via notFound() below. Pages that failed to prerender (e.g. a slow
+// database during the build) are rendered on request instead of becoming a 404.
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;

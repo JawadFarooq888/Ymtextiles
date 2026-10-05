@@ -15,7 +15,10 @@ async function AnnouncementBar() {
   if (!text) return null;
   const content = <span className="line-clamp-1">{text}</span>;
   return (
-    <div className="bg-primary px-4 py-2 text-center text-xs tracking-wide text-primary-foreground">
+    <aside
+      aria-label="Announcement"
+      className="bg-primary px-4 py-2 text-center text-xs tracking-wide text-primary-foreground"
+    >
       {banner?.ctaUrl ? (
         <Link href={banner.ctaUrl} className="underline-offset-4 hover:underline">
           {content}
@@ -23,7 +26,7 @@ async function AnnouncementBar() {
       ) : (
         content
       )}
-    </div>
+    </aside>
   );
 }
 

@@ -12,9 +12,11 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  timeout: 60_000,
-  expect: { timeout: 15_000 },
+  timeout: 90_000,
+  expect: { timeout: 25_000 },
   fullyParallel: false,
+  // One worker: the Neon free tier has few connections and is slow to wake up.
+  workers: 1,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {

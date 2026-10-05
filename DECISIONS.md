@@ -95,3 +95,18 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Stock imagery**: hero banners and category tiles use free Unsplash fabric photos (see `docs/IMAGE_CREDITS.md`). We use fabric-only images, not photos of people (no model releases) and not other brands' garments. Product photos stay as the "Photo coming soon" placeholder until the owner uploads real photos.
 - **Announcement text** avoids mentioning card payment until Stripe keys are live.
 - **`POST /api/revalidate`** (Bearer `CRON_SECRET`) refreshes shop caches after changes made outside the admin panel.
+
+## Accessibility pass (screen reader, keyboard, mobile)
+
+Audited with axe-core (WCAG 2.1 AA) at 375px, using the accessibility tree and keyboard-only flows. Fixes:
+
+- **Product cards** read once and in order: "Name, Sale price £x, Was £y, 20% off, New in". Images inside card links are decorative (`alt=""`), and the visual badges are `aria-hidden` with the same facts repeated as screen-reader text after the price.
+- **The size group** now has an accessible name (the `<legend>` is the fieldset's first child).
+- **Basket drawer** returns focus to the button that opened it ("Add to basket"), even though it is opened from code rather than a trigger.
+- **Landmarks**: the announcement bar and the floating WhatsApp button are labelled `<aside>` regions. Listing pages have a screen-reader-only `h2` so product names (`h3`) follow a correct heading order.
+- **Size chart table** scroll area is keyboard-focusable and labelled.
+- **Contrast**: the footer "Sign up" button is now ivory on green. Ink on gold was 4.2:1, below AA.
+- **Touch targets**: carousel dots, breadcrumbs, "View all", size chart buttons and the newsletter checkbox were enlarged. Carousel dots are plain buttons (`aria-current`), not tabs without panels.
+- **Tests**: `tests/e2e/accessibility.spec.ts` covers axe checks on key pages (no serious or critical issues), one `h1` and `main` per page, named groups, skip link, mobile menu focus trap and return, buying with the keyboard only, the early-click alert, and form errors that move focus and are linked to their fields.
+- **Static pages** use ISR (`revalidate = 3600`) instead of `dynamicParams = false`, so a page that failed to prerender during a slow build is rendered on request rather than returning 404.
+- **Playwright runs with one worker** and longer timeouts, because the Neon free tier has few connections and wakes slowly.

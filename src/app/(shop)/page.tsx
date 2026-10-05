@@ -180,7 +180,7 @@ function SectionHeading({
       {href ? (
         <Link
           href={href}
-          className="shrink-0 text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 shrink-0 items-center text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           View all
         </Link>

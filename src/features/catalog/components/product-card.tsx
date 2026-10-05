@@ -27,7 +27,7 @@ export function ProductCard({
             <>
               <Image
                 src={cloudinaryUrl(first.url, 600)}
-                alt={first.alt || product.name}
+                alt=""
                 fill
                 priority={priority}
                 sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
@@ -44,9 +44,9 @@ export function ProductCard({
               ) : null}
             </>
           ) : (
-            <ImagePlaceholder label={product.name} />
+            <ImagePlaceholder decorative />
           )}
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+          <div aria-hidden className="absolute top-2 left-2 flex flex-col items-start gap-1">
             {onSale ? (
               <span className="rounded-full bg-brand-sale px-2 py-0.5 text-[11px] font-medium text-white">
                 -{percentOff(product.basePrice, product.salePrice!)}%
@@ -69,6 +69,16 @@ export function ProductCard({
             {product.name}
           </h3>
           <Price basePrice={product.basePrice} salePrice={product.salePrice} />
+          {onSale || product.isNew ? (
+            <span className="sr-only">
+              {[
+                onSale ? `${percentOff(product.basePrice, product.salePrice!)}% off` : null,
+                product.isNew ? "New in" : null,
+              ]
+                .filter(Boolean)
+                .join(", ")}
+            </span>
+          ) : null}
         </div>
       </Link>
     </article>

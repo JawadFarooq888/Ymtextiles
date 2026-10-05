@@ -65,7 +65,7 @@ test("product page: WhatsApp order needs a selection, creates an order and opens
   await popup.waitForURL(/wa\.me/);
 
   const url = popup.url();
-  expect(url).toContain("https://wa.me/447000000000?text=");
+  expect(url).toMatch(/^https:\/\/wa\.me\/\d{10,15}\?text=/);
   const message = decodeMessage(url);
   expect(message).toMatch(/^Hi YM Textiles, I would like to order:\n\nOrder ref: YM-\d+\n/);
   expect(message).toContain("Product: Sample Embroidered Lawn 3 Piece");

@@ -49,7 +49,7 @@ export function NewsletterForm({
           disabled={pending}
           className={cn(
             "h-11 shrink-0 rounded-full px-6",
-            tone === "dark" && "bg-brand-gold text-brand-ink hover:bg-brand-gold/90",
+            tone === "dark" && "bg-brand-ivory text-primary hover:bg-white",
           )}
         >
           {pending ? "..." : "Sign up"}
@@ -65,7 +65,7 @@ export function NewsletterForm({
           type="checkbox"
           name="consent"
           required
-          className="mt-0.5 size-4 accent-brand-gold"
+          className="mt-0.5 size-5 shrink-0 accent-brand-gold"
         />
         <span>
           I&apos;d like to receive emails about new arrivals and offers. Unsubscribe at any time.

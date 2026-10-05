@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -20,6 +20,7 @@ export function BasketDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold:
   const { lines, drawerOpen, setDrawerOpen } = useBasket();
   const pathname = usePathname();
   const close = () => setDrawerOpen(false);
+  const returnFocusTo = useRef<HTMLElement | null>(null);
 
   // Close when navigating (e.g. to the basket page).
   useEffect(() => setDrawerOpen(false), [pathname, setDrawerOpen]);
@@ -30,7 +31,20 @@ export function BasketDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold:
 
   return (
     <Sheet open={hydrated && drawerOpen} onOpenChange={setDrawerOpen}>
-      <SheetContent side="right" className="flex w-full flex-col bg-background sm:max-w-md">
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col bg-background sm:max-w-md"
+        onOpenAutoFocus={() => {
+          returnFocusTo.current = document.activeElement as HTMLElement | null;
+        }}
+        onCloseAutoFocus={(event) => {
+          const target = returnFocusTo.current;
+          if (target?.isConnected) {
+            event.preventDefault();
+            target.focus();
+          }
+        }}
+      >
         <SheetHeader className="border-b">
           <SheetTitle className="font-heading text-2xl">Your basket</SheetTitle>
           <SheetDescription>

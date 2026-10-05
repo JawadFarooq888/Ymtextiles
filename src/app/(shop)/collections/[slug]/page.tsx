@@ -81,7 +81,10 @@ export default async function CollectionPage({
 
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <DesktopFilters filters={filters} facets={facets} />
-        <section aria-label="Products">
+        <section aria-labelledby="products-heading">
+          <h2 id="products-heading" className="sr-only">
+            Products
+          </h2>
           <div className="mb-6 flex items-center justify-between gap-3">
             <MobileFilters filters={filters} facets={facets} total={total} />
             <p className="hidden text-sm lg:block" aria-live="polite">

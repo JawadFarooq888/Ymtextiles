@@ -49,7 +49,7 @@ export function SizeChartTable({ rows, notes }: { rows: SizeChartRow[]; notes?: 
             aria-checked={unit === u}
             onClick={() => setUnit(u)}
             className={cn(
-              "min-h-9 rounded-full px-4 text-sm",
+              "min-h-11 rounded-full px-4 text-sm",
               unit === u ? "bg-primary text-primary-foreground" : "text-brand-body",
             )}
           >
@@ -57,7 +57,12 @@ export function SizeChartTable({ rows, notes }: { rows: SizeChartRow[]; notes?: 
           </button>
         ))}
       </div>
-      <div className="overflow-x-auto rounded-xl border">
+      <div
+        className="overflow-x-auto rounded-xl border focus-visible:outline-2 focus-visible:outline-primary"
+        tabIndex={0}
+        role="region"
+        aria-label="Size chart measurements, scroll sideways for more"
+      >
         <table className="w-full min-w-[420px] text-sm">
           <caption className="sr-only">
             Measurements in {unit === "in" ? "inches" : "centimetres"}
@@ -109,7 +114,7 @@ export function SizeChartDialog({
       <DialogTrigger asChild>
         <button
           type="button"
-          className="inline-flex min-h-9 items-center gap-1 text-sm text-primary underline underline-offset-4"
+          className="inline-flex min-h-11 items-center gap-1 text-sm text-primary underline underline-offset-4"
         >
           <RulerIcon className="size-4" aria-hidden /> Size chart
         </button>

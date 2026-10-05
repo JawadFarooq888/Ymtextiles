@@ -74,13 +74,13 @@ export function VariantSelector({
       </fieldset>
 
       <fieldset>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <legend className="text-sm">
-            <span className="font-medium text-brand-ink">Size:</span>{" "}
-            {selectedSize?.label ?? "Please choose"}
-          </legend>
-          {sizeChartTrigger}
-        </div>
+        {/* The legend must be the fieldset's first child so screen readers name the group. */}
+        <legend className="float-left mb-3 text-sm">
+          <span className="font-medium text-brand-ink">Size:</span>{" "}
+          {selectedSize?.label ?? "Please choose"}
+        </legend>
+        <div className="-mt-1 mb-3 flex justify-end">{sizeChartTrigger}</div>
+        <div className="clear-both" />
         <div className="flex flex-wrap gap-2">
           {sizes.map((s) => {
             const available = sizeAvailable(variants, s.id, selection.colourId);

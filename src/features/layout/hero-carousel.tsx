@@ -117,20 +117,24 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
           >
             <ChevronLeftIcon className="size-5" />
           </button>
-          <div className="flex gap-1.5" role="tablist" aria-label="Choose slide">
+          <div className="flex" role="group" aria-label="Choose slide">
             {slides.map((s, i) => (
               <button
                 key={s.id}
                 type="button"
-                role="tab"
-                aria-selected={i === index}
-                aria-label={`Slide ${i + 1}`}
+                aria-current={i === index ? "true" : undefined}
+                aria-label={`Go to slide ${i + 1}: ${s.title}`}
                 onClick={() => goTo(i)}
-                className={cn(
-                  "h-2 rounded-full bg-white transition-all",
-                  i === index ? "w-6" : "w-2 opacity-60",
-                )}
-              />
+                className="flex h-8 min-w-8 items-center justify-center"
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-2 rounded-full bg-white transition-all",
+                    i === index ? "w-6" : "w-2 opacity-60",
+                  )}
+                />
+              </button>
             ))}
           </div>
           <button
