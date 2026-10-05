@@ -75,3 +75,16 @@ Judgement calls and deviations from `docs/BUILD_SPEC.md`.
 - **Rate limiting** (Upstash sliding window: 10 WhatsApp orders per 10 minutes per IP) is wired in. It allows everything when Upstash isn't configured or is unreachable, so a Redis outage never blocks orders.
 - **Phone numbers** are stored in international digits (`447123456789`) so "Message customer" can open WhatsApp directly. UK formats (07…, +44, 0044) and other countries with `+` are accepted. Postcodes are normalised to `SW1A 1AA` form.
 - **Vitest** unit tests cover money, delivery fees, the WhatsApp message and URL builders (encoding, £, line breaks, long baskets), postcode and phone validation, variant availability, SKUs and status transitions.
+
+## Phase 6: Stripe checkout and emails
+
+- **Stripe Checkout (hosted page)** in GBP with prices from the database. Line items, delivery and payment methods are all on Stripe's page. Payment methods (cards, Apple Pay, Google Pay, Klarna) are not hard-coded: switch them on in the Stripe dashboard (_Settings → Payment methods_), and Checkout shows whatever is enabled.
+- **Delivery choice happens in Stripe**: two shipping options built from Settings (standard, free above the threshold, and express), UK addresses only, phone number collected. The order's delivery fee and total are taken from the paid session.
+- **No delivery-time estimates** are shown in Stripe until the owner confirms dispatch times.
+- **Order lifecycle**: the order is created as `PENDING` before redirecting to Stripe. The webhook marks it `PAID` (only from `PENDING`, so it's idempotent), stores the customer's details and reduces stock. `checkout.session.expired` (sessions expire after 1 hour) and `async_payment_failed` cancel the pending order.
+- **Oversold edge case**: if stock runs out between checkout and payment, the order stays `PAID` (money was taken) and gets an "ATTENTION" admin note, instead of failing the webhook.
+- **Webhook** at `/api/stripe/webhook` verifies the signature against the raw body. It returns 500 only on unexpected errors, so Stripe retries; the handlers are safe to repeat. Tested with signed fake events, including a duplicate delivery.
+- **Emails** (Resend + React Email): customer confirmation and admin alert for paid website orders, and admin alert for new WhatsApp orders (sent after the response via `after()`). Email failures are logged, never thrown. `EMAIL_FROM` must use a domain verified in Resend; without it, Resend's test sender only reaches the account owner.
+- **Cancel** returns to `/basket` with the basket intact. The basket is only cleared on the success page.
+- **Deployment**: `vercel-build` runs `prisma generate && prisma migrate deploy && next build`, so production migrations apply on each deploy (uses `DIRECT_URL`).
+- **Neon free tier sleeps when idle**: `DATABASE_URL` also gets `&pool_timeout=30` so the first request after a sleep doesn't time out.

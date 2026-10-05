@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { LockIcon } from "lucide-react";
 import { BasketLine } from "@/features/basket/components/basket-line";
+import { CheckoutButton } from "@/features/checkout/components/checkout-button";
 import { WhatsAppBasketDialog } from "@/features/basket/components/whatsapp-basket-dialog";
 import { deliveryFee, type DeliverySettings } from "@/features/basket/pricing";
 import { basketSubtotal, useBasket, useHydrated } from "@/features/basket/store";
@@ -11,13 +11,7 @@ import type { BasketQuote } from "@/features/basket/service";
 import { quoteBasketAction } from "@/features/whatsapp/actions";
 import { formatPence } from "@/lib/money";
 
-export function BasketView({
-  delivery,
-  checkoutButton,
-}: {
-  delivery: DeliverySettings;
-  checkoutButton?: (props: { disabled: boolean }) => React.ReactNode;
-}) {
+export function BasketView({ delivery }: { delivery: DeliverySettings }) {
   const hydrated = useHydrated();
   const lines = useBasket((s) => s.lines);
   const sync = useBasket((s) => s.sync);
@@ -124,17 +118,7 @@ export function BasketView({
           </p>
         ) : null}
         <div className="mt-6 grid gap-3">
-          {checkoutButton ? (
-            checkoutButton({ disabled: hasProblems || !quote })
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium tracking-wide text-primary-foreground uppercase disabled:opacity-60"
-            >
-              <LockIcon className="size-4" aria-hidden /> Checkout securely
-            </button>
-          )}
+          <CheckoutButton disabled={hasProblems || !quote} />
           <WhatsAppBasketDialog disabled={hasProblems || !quote} />
         </div>
       </aside>

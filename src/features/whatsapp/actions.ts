@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { sendNewOrderEmails } from "@/features/orders/notifications";
 import { getSettings } from "@/lib/settings";
 import { getSiteUrl } from "@/lib/site";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -30,6 +32,8 @@ async function finish(
 ) {
   const message = buildWhatsAppMessage(order, settings, getSiteUrl());
   revalidatePath("/admin/orders");
+  // Alert the owner by email after the response, so opening WhatsApp isn't delayed.
+  after(() => sendNewOrderEmails(order.id, { customer: false }));
   return ok<WhatsAppOrderResult>({
     orderNumber: order.orderNumber,
     url: buildWhatsAppUrl(settings.whatsappNumber, message),
