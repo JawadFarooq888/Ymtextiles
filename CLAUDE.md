@@ -1,5 +1,9 @@
 # YM Textiles
 
+Online shop for **jeans** (men, women, kids, unisex), UK, GBP. Sizes are waist + length (W32 L30).
+
+**Warning:** `.env` points at the LIVE production database. Never pass it as a Prisma shadow database or run reset commands. Migrations must be additive; generate SQL with `prisma migrate diff --from-url "$DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --script`.
+
 The full build specification is in `docs/BUILD_SPEC.md`. Follow it, phase by phase.
 Record any deviation or judgement call in `DECISIONS.md`.
 

@@ -1,34 +1,33 @@
 # Image credits
 
-Banner and category images are free stock photos from [Unsplash](https://unsplash.com), used under the
-[Unsplash License](https://unsplash.com/license) (free for commercial use, no attribution required; credited
-here anyway). They show fabrics only, not YM Textiles products. Replace them with the shop's own photos when
-available (Admin → Banners / Categories).
+Banner, category and sample product images are free stock photos of denim from
+[Unsplash](https://unsplash.com), used under the [Unsplash License](https://unsplash.com/license) (free for
+commercial use, no attribution required; credited here anyway). They show jeans in general, not specific
+YM Textiles products. Photos showing people or other brands' labels were avoided. Replace them with the shop's
+own photos when available (Admin → Banners / Categories / Products).
 
-| Used for                                      | Unsplash photo                          |
-| --------------------------------------------- | --------------------------------------- |
-| Hero: "Pakistani clothing, stocked in the UK" | https://unsplash.com/photos/dQO-3ud96rQ |
-| Hero: "Formal & wedding wear"                 | https://unsplash.com/photos/Qh8qQctzg-A |
-| Hero: "Unstitched suits"                      | https://unsplash.com/photos/R_bv0S9MC8c |
-| Category: Ready to Wear                       | https://unsplash.com/photos/6H1mPtpsJFw |
-| Category: Unstitched                          | https://unsplash.com/photos/nECy3D-Enpo |
-| Category: Formal & Wedding                    | https://unsplash.com/photos/HyBXy5PHQR8 |
-| Category: Men                                 | https://unsplash.com/photos/Hrgv_0fmOI4 |
+| Used for                      | Unsplash photo                          |
+| ----------------------------- | --------------------------------------- |
+| Hero: "Find your perfect fit" | https://unsplash.com/photos/UP9DtTjRYpI |
+| Hero: "Every wash, every fit" | https://unsplash.com/photos/omsbsgbXlB4 |
+| Hero: "Men's jeans"           | https://unsplash.com/photos/2QSK4kFoVZE |
+| Category: Men                 | https://unsplash.com/photos/KVHIG5biScQ |
+| Category: Women               | https://unsplash.com/photos/u-TajA5X5rg |
+| Category: Kids                | https://unsplash.com/photos/fB9Ex6Q5L_g |
+| Category: Unisex              | https://unsplash.com/photos/aWLTXw6kbDw |
+
+## Sample jeans images (by wash)
+
+Each sample product (`YMJ-SMP-*`) shows two photos per wash, linked to that wash so the gallery switches when a
+customer picks it. They are shared across products and labelled "(sample image)" in their alt text. Replace them
+with real product photos before selling those products.
+
+| Wash        | Unsplash photos                                                                   |
+| ----------- | --------------------------------------------------------------------------------- |
+| Light Blue  | https://unsplash.com/photos/XdXk39Bj3B0 · https://unsplash.com/photos/rJQCoHb8XxA |
+| Mid Blue    | https://unsplash.com/photos/9yoXrG6Er_g · https://unsplash.com/photos/KSVtSQrm9eo |
+| Dark Indigo | https://unsplash.com/photos/wNP79A-_bRY · https://unsplash.com/photos/VgEaUEyKUpk |
+| Black       | https://unsplash.com/photos/h6PKsr0wDH4 · https://unsplash.com/photos/Kz8uVOyrIzA |
 
 Product photos must be the shop's own photos of the actual items. Images copied from search engines or other
 brands are not used: they are usually copyrighted and would misrepresent what customers receive.
-
-## Sample product images (by colour)
-
-Each sample product (`YM-SMP-*`) shows two Unsplash fabric/print photos per colour, linked to that colour so the
-gallery switches when a customer picks it. They are shared across products and labelled "(sample image)" in their
-alt text. Replace them with real product photos before selling those products.
-
-| Colour | Unsplash photos                                                                   |
-| ------ | --------------------------------------------------------------------------------- |
-| Green  | https://unsplash.com/photos/Vvw95gGrues · https://unsplash.com/photos/xmL7BT7w07k |
-| Pink   | https://unsplash.com/photos/KSl0CiVulpE · https://unsplash.com/photos/LfCD_R84AwY |
-| Navy   | https://unsplash.com/photos/mHWfR5imoLA · https://unsplash.com/photos/Hmi_dKKCAqU |
-| Maroon | https://unsplash.com/photos/ny_9kXSxkdM · https://unsplash.com/photos/Ve5SsbBNPYM |
-| Black  | https://unsplash.com/photos/QOI290djbwI · https://unsplash.com/photos/GkwoMPCmwDs |
-| Ivory  | https://unsplash.com/photos/4cW9DRFiToc · https://unsplash.com/photos/hD2Fs7Aa504 |

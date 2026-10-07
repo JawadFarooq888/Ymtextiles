@@ -125,3 +125,24 @@ Audited with axe-core (WCAG 2.1 AA) at 375px, using the accessibility tree and k
 - **Newsletter** (Admin → Newsletter): list, search, unsubscribe/resubscribe, permanently delete (GDPR erasure), and export active subscribers as CSV.
 - **Settings cache key is versioned** (`["settings","v2"]`). Vercel's data cache survives deploys, so when Settings gains columns, bump the version or the old cached row (without the new fields) would be served.
 - **Stock transactions** allow 20 seconds, so a just-woken Neon database or a slow connection doesn't abort confirmations or cancellations.
+
+## Pivot to jeans (2026-10-07)
+
+The business now sells **jeans only**: retail, for men, women, kids and unisex, to UK customers in GBP.
+
+- **Sizing**: `Size` has optional `waist` and `length` (inches). When every size of a product has both, the product page shows separate **Waist** and **Length** choices that combine into one size (e.g. W32 L30).
+  - Kids sizes are ages (`7-8Y`) with no waist or length, and show as a normal size row.
+  - Labels are generated as `W32 L30`; sort order is `waist × 100 + length`.
+  - Variant SKUs keep both numbers (`…-W32L30-BLC`), so different lengths never clash.
+- **Product attributes**: `fit` (free text with suggestions), `rise` (Low/Mid/High) and `stretch` (No/Comfort/Super stretch) replace pieces and stitched/unstitched in the UI. `fabric` now holds the composition. The `pieces` and `type` columns stay in the database (unused), so old rows and CSVs still load.
+- **Filters**: waist, length, other sizes, wash, fit, rise, stretch and price. A product matches only if a single in-stock variant meets the size and wash filters together.
+- **Size charts**: admin-defined columns (default Waist, Hip, Inside leg, Front rise, Leg opening) with inch values per row; centimetres are calculated.
+- **Menu**: New In, the categories (Men, Women, Kids, Unisex, with fit sub-categories), Best Sellers, Sale. `menuShowBestSellers` replaces the Lawn switch; the old `menuShowLawn` column is kept but unused.
+- **Brand look** (green/ivory/gold, Cormorant + Jost) is unchanged, as approved.
+- **Migrations are additive only.** They are generated with `prisma migrate diff --from-url` and never with the live database as a shadow database (see the incident below). Cache keys were versioned (`catalog-index v2`, `product-by-slug v2`, `settings v3`, `size-charts-guide v2`), because Vercel's data cache outlives deploys.
+- **Data switch**:
+  - Removed the clothing sample products, categories, sizes, colours, charts and hero banners.
+  - Seeded the jeans sample data.
+  - Updated the text of built-in pages that had never been edited, and the default settings text.
+  - Kept real orders.
+- **Incident**: while generating the migration, the production database URL was passed as Prisma's shadow database, and Prisma reset it. The owner restored it with Neon point-in-time restore (to 06:00 UTC). A separate Neon `dev` branch for local work and tests is strongly recommended.
