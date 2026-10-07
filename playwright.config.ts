@@ -21,6 +21,24 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL,
+    // Cookie choice already made, so the banner does not cover buttons (it has its own test).
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: new URL(baseURL).origin,
+          localStorage: [
+            {
+              name: "ym-consent",
+              value: JSON.stringify({
+                state: { choice: "rejected", decidedAt: "2026-01-01T00:00:00.000Z" },
+                version: 1,
+              }),
+            },
+          ],
+        },
+      ],
+    },
     trace: "retain-on-failure",
   },
   projects: [{ name: "desktop", use: { ...devices["Desktop Chrome"] } }],

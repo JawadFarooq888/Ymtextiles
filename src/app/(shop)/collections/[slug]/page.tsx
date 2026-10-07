@@ -12,6 +12,7 @@ import { ProductGrid } from "@/features/catalog/components/product-card";
 import { resolveCollection } from "@/features/catalog/collections";
 import { applyFilters, facetOptions, parseFilters } from "@/features/catalog/filters";
 import { getCatalogIndex, getCategoryTree } from "@/features/catalog/queries";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 type Params = Promise<{ slug: string }>;
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -50,16 +51,16 @@ export default async function CollectionPage({
   const facets = facetOptions(scope, index);
   const { products, total, page, pageCount } = applyFilters(scope, filters);
   const basePath = `/collections/${slug}`;
+  const crumbs = [
+    { name: "Home", href: "/" },
+    ...collection.parents.map((p) => ({ name: p.name, href: `/collections/${p.slug}` })),
+    { name: collection.title },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <Breadcrumbs
-        items={[
-          { name: "Home", href: "/" },
-          ...collection.parents.map((p) => ({ name: p.name, href: `/collections/${p.slug}` })),
-          { name: collection.title },
-        ]}
-      />
+      <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <Breadcrumbs items={crumbs} />
       <header className="mt-4 mb-6">
         <h1 className="text-4xl font-semibold md:text-5xl">{collection.title}</h1>
         {collection.description ? <p className="mt-2 max-w-2xl">{collection.description}</p> : null}

@@ -4,6 +4,7 @@ import { SiteFooter } from "@/features/layout/site-footer";
 import { SiteHeader } from "@/features/layout/site-header";
 import { FloatingWhatsApp } from "@/features/whatsapp/floating-whatsapp";
 import { getSettings } from "@/lib/settings";
+import { ConsentBanner, ConsentedAnalytics } from "@/features/consent/consent-banner";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings();
@@ -20,6 +21,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
         defaultMessage={`Hi ${settings.storeName}, I have a question.`}
       />
       <Toaster position="top-center" />
+      <ConsentBanner />
+      <ConsentedAnalytics />
     </>
   );
 }

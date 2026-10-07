@@ -9,6 +9,7 @@ import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { buildWhatsAppUrl } from "@/features/whatsapp/url";
 import { cloudinaryUrl } from "@/lib/image";
 import { getSettings } from "@/lib/settings";
+import { JsonLd, organizationJsonLd } from "@/lib/seo";
 import { parseWhyUs } from "@/features/content/why-us";
 
 const WHY_ICONS = [PlaneIcon, StoreIcon, RulerIcon, MessageCircleIcon];
@@ -39,6 +40,7 @@ export default async function HomePage() {
         </section>
       )}
 
+      <JsonLd data={organizationJsonLd(settings)} />
       <h1 className="sr-only">YM Textiles: Pakistani clothing in the UK</h1>
 
       {tree.length ? (

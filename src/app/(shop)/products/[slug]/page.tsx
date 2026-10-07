@@ -9,6 +9,7 @@ import { getCatalogIndex, getProductBySlug } from "@/features/catalog/queries";
 import { ProductPurchase } from "@/features/product/components/product-purchase";
 import { SetFloatingWhatsAppMessage } from "@/features/whatsapp/floating-whatsapp";
 import { getSiteUrl } from "@/lib/site";
+import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import { SizeChartDialog } from "@/features/product/components/size-chart-dialog";
 import { formatPence } from "@/lib/money";
 import { getSettings } from "@/lib/settings";
@@ -92,6 +93,25 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
+      <JsonLd
+        data={productJsonLd({
+          name: product.name,
+          slug: product.slug,
+          sku: product.sku,
+          description: product.description,
+          brand: settings.storeName,
+          fabric: product.fabric,
+          images: product.images.map((i) => cloudinaryUrl(i.url, 1200)),
+          variants: product.variants.map((v) => ({
+            sku: v.sku,
+            stock: v.stock,
+            size: v.size.label,
+            colour: v.colour.name,
+            price: v.priceOverride ?? product.salePrice ?? product.basePrice,
+          })),
+        })}
+      />
+      <JsonLd data={breadcrumbJsonLd(crumbs)} />
       <SetFloatingWhatsAppMessage
         message={`Hi, I have a question about ${product.name} (${getSiteUrl()}/products/${product.slug})`}
       />

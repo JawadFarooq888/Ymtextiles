@@ -5,6 +5,7 @@ import { getPageLinks } from "@/features/content/queries";
 import { NewsletterForm } from "@/features/newsletter/newsletter-form";
 import { buildWhatsAppUrl } from "@/features/whatsapp/url";
 import { getSettings } from "@/lib/settings";
+import { CookieSettingsButton } from "@/features/consent/consent-banner";
 
 export async function SiteFooter() {
   const [settings, pages] = await Promise.all([getSettings(), getPageLinks()]);
@@ -59,6 +60,9 @@ export async function SiteFooter() {
                 </Link>
               </li>
             ))}
+            <li>
+              <CookieSettingsButton className="hover:underline" />
+            </li>
             {social.map((s) => (
               <li key={s.label}>
                 <a

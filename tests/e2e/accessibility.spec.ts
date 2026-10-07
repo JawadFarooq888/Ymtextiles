@@ -184,3 +184,27 @@ test.describe("desktop, keyboard only", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 });
+
+test.describe("cookie consent", () => {
+  // Start with no choice made, unlike the other tests.
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("banner asks once, reject is as easy as accept, and it can be reopened", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const banner = page.getByRole("region", { name: "Cookie choices" });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Reject analytics" })).toBeVisible();
+    await expect(banner.getByRole("button", { name: "Accept analytics" })).toBeVisible();
+
+    await banner.getByRole("button", { name: "Reject analytics" }).click();
+    await expect(banner).toBeHidden();
+    await page.reload();
+    await expect(page.getByRole("region", { name: "Cookie choices" })).toBeHidden();
+
+    await page.getByRole("button", { name: "Cookie settings" }).click();
+    await expect(page.getByRole("region", { name: "Cookie choices" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Cookie choices" })).toBeFocused();
+  });
+});
