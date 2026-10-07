@@ -50,3 +50,28 @@ export async function cleanupTestData(orderNumbers: string[] = []) {
     await db.$disconnect();
   }
 }
+
+/**
+ * Pick the first in-stock wash, then the first available waist and length on a jeans
+ * product page. Returns what was chosen, e.g. { wash: "Black", size: "W28 L30" }.
+ */
+export async function chooseJeans(page: Page) {
+  const washButton = page
+    .getByRole("group", { name: /^Wash:/ })
+    .locator('button[aria-pressed]:not([aria-label*="sold out"])')
+    .first();
+  const wash = (await washButton.getAttribute("aria-label")) ?? "";
+  if ((await washButton.getAttribute("aria-pressed")) !== "true") await washButton.click();
+
+  const pick = async (group: RegExp) => {
+    const button = page
+      .getByRole("group", { name: group })
+      .locator("button[aria-pressed]:not([disabled])")
+      .first();
+    if ((await button.getAttribute("aria-pressed")) !== "true") await button.click();
+    return (await button.innerText()).split("\n")[0].trim();
+  };
+  const waist = await pick(/^Waist:/);
+  const length = await pick(/^Length:/);
+  return { wash, waist, length, size: `${waist} ${length}` };
+}

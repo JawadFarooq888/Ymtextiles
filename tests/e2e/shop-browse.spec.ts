@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { chooseJeans } from "./helpers";
 
 const SHOTS = process.env.E2E_SCREENSHOTS; // set to a folder to save screenshots for review
 
@@ -25,20 +26,21 @@ for (const viewport of [
       // Navigate to a category via the menu
       if (viewport.name === "mobile") {
         await page.getByRole("button", { name: "Open menu" }).click();
-        await page.getByRole("dialog").getByText("Unstitched", { exact: true }).click();
+        await page.getByRole("dialog").getByText("Women", { exact: true }).click();
+        await page.getByRole("dialog").getByRole("link", { name: "Shop all Women" }).click();
       } else {
         await page
           .getByRole("navigation", { name: "Main" })
-          .getByRole("link", { name: "Unstitched" })
+          .getByRole("link", { name: "Women", exact: true })
           .click();
       }
-      await expect(page).toHaveURL(/\/collections\/unstitched/);
-      await expect(page.getByRole("heading", { name: "Unstitched", level: 1 })).toBeVisible();
+      await expect(page).toHaveURL(/\/collections\/women/);
+      await expect(page.getByRole("heading", { name: "Women", level: 1 })).toBeVisible();
 
-      // Filter by fabric; the URL keeps the filter so it can be shared
+      // Filter by fit; the URL keeps the filter so it can be shared
       if (viewport.name === "mobile") await page.getByRole("button", { name: /^Filters/ }).click();
-      await page.getByRole("button", { name: "Chiffon", exact: true }).click();
-      await expect(page).toHaveURL(/fabric=Chiffon/);
+      await page.getByRole("button", { name: "Wide leg", exact: true }).click();
+      await expect(page).toHaveURL(/fit=Wide/);
       if (viewport.name === "mobile") await page.keyboard.press("Escape");
       const cards = page.getByRole("article");
       await expect(cards).toHaveCount(1);
@@ -46,38 +48,35 @@ for (const viewport of [
         await page.screenshot({ path: `${SHOTS}/${viewport.name}-collection.png`, fullPage: true });
 
       await cards.first().getByRole("link").click();
-      await expect(page).toHaveURL(/\/products\/sample-unstitched-chiffon-3-piece/);
-      await expect(page.getByRole("heading", { level: 1 })).toContainText("Chiffon");
-      // Single size is pre-selected for unstitched products
-      await expect(page.getByRole("button", { name: /Unstitched/, pressed: true })).toBeVisible();
+      await expect(page).toHaveURL(/\/products\/sample-womens-wide-leg-jeans/);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText("Wide Leg");
+      // Jeans are chosen by waist and length separately
+      await expect(page.getByRole("group", { name: /^Waist:/ })).toBeVisible();
+      await expect(page.getByRole("group", { name: /^Length:/ })).toBeVisible();
       if (SHOTS)
         await page.screenshot({ path: `${SHOTS}/${viewport.name}-product.png`, fullPage: true });
     });
   });
 }
 
-test("product page: selecting colour and size shows stock and blocks sold-out sizes", async ({
+test("product page: choosing wash, waist and length shows stock; size chart in inches and cm", async ({
   page,
 }) => {
-  await page.goto("/products/sample-embroidered-lawn-3-piece");
-  await page.getByRole("button", { name: /^Green/ }).click();
-  await expect(page.getByText("Colour: Green")).toBeVisible();
-  // Pick the first size that is available in Green
-  const available = page
-    .locator("fieldset")
-    .filter({ hasText: "Size:" })
-    .locator("button[aria-pressed]:not([disabled])")
-    .first();
-  await available.click();
+  await page.goto("/products/sample-mens-slim-jeans");
+  const chosen = await chooseJeans(page);
+  await expect(page.getByText(`Wash: ${chosen.wash}`)).toBeVisible();
+  await expect(page.getByText(`Waist: ${chosen.waist}`)).toBeVisible();
+  await expect(page.getByText(`Length: ${chosen.length}`)).toBeVisible();
   await expect(page.getByText(/In stock|Only \d+ left/)).toBeVisible();
   await page.getByRole("button", { name: "Size chart" }).click();
-  await expect(page.getByRole("dialog")).toContainText("Chest");
+  await expect(page.getByRole("dialog")).toContainText("Waist");
+  await expect(page.getByRole("dialog")).toContainText("Leg opening");
   await page.getByRole("radio", { name: "Centimetres" }).click();
   await expect(page.getByRole("dialog").getByRole("cell").first()).not.toBeEmpty();
 });
 
 test("search finds products by partial word", async ({ page }) => {
-  await page.goto("/search?q=embro");
+  await page.goto("/search?q=skinn");
   await expect(page.getByText(/results? for/)).toBeVisible();
   await expect(page.getByRole("article").first()).toBeVisible();
 });

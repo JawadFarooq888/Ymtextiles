@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
-import { cleanupTestData, loginAsAdmin } from "./helpers";
+import { chooseJeans, cleanupTestData, loginAsAdmin } from "./helpers";
 
 // Orders created here are deleted afterwards, even if a test fails.
 const createdOrders: string[] = [];
@@ -16,27 +16,6 @@ function decodeMessage(url: string): string {
   return decodeURIComponent(new URL(url).searchParams.get("text") ?? "");
 }
 
-async function chooseAvailableColour(page: Page) {
-  const colour = page
-    .locator("fieldset")
-    .filter({ hasText: "Colour:" })
-    .locator('button[aria-pressed]:not([aria-label*="sold out"])')
-    .first();
-  const name = (await colour.getAttribute("aria-label")) ?? "";
-  await colour.click();
-  return name;
-}
-
-async function chooseAvailableSize(page: Page) {
-  const size = page
-    .locator("fieldset")
-    .filter({ hasText: "Size:" })
-    .locator("button[aria-pressed]:not([disabled])")
-    .first();
-  if ((await size.getAttribute("aria-pressed")) !== "true") await size.click();
-  return (await size.innerText()).split("\n")[0].trim();
-}
-
 async function cancelOrderInAdmin(page: Page, orderNumber: string) {
   await page.goto(`/admin/orders?q=${orderNumber}`);
   await page.getByRole("link", { name: orderNumber }).click();
@@ -50,7 +29,7 @@ test("product page: WhatsApp order needs a selection, creates an order and opens
   context,
 }) => {
   await stubWhatsApp(context);
-  await page.goto("/products/sample-embroidered-lawn-3-piece");
+  await page.goto("/products/sample-mens-slim-jeans");
 
   // Clicking before choosing explains what is missing and opens nothing.
   // (The button is aria-disabled, which Playwright treats as not clickable; real users can still click it.)
@@ -59,8 +38,7 @@ test("product page: WhatsApp order needs a selection, creates an order and opens
     page.getByRole("alert").filter({ hasText: "Please select a size and colour" }),
   ).toBeVisible();
 
-  const colour = await chooseAvailableColour(page);
-  const size = await chooseAvailableSize(page);
+  const { wash, size } = await chooseJeans(page);
   await page.getByRole("button", { name: "Increase quantity" }).click();
 
   const popupPromise = page.waitForEvent("popup");
@@ -72,13 +50,13 @@ test("product page: WhatsApp order needs a selection, creates an order and opens
   expect(url).toMatch(/^https:\/\/wa\.me\/\d{10,15}\?text=/);
   const message = decodeMessage(url);
   expect(message).toMatch(/^Hi YM Textiles, I would like to order:\n\nOrder ref: YM-\d+\n/);
-  expect(message).toContain("Product: Sample Embroidered Lawn 3 Piece");
+  expect(message).toContain("Product: Sample Men's Slim Jeans");
   expect(message).toContain(`Size: ${size}`);
-  expect(message).toContain(`Colour: ${colour}`);
+  expect(message).toContain(`Colour: ${wash}`);
   expect(message).toContain("Quantity: 2");
-  expect(message).toContain("Price: £45.00 each");
-  expect(message).toContain("Total: £90.00");
-  expect(message).toContain("/products/sample-embroidered-lawn-3-piece");
+  expect(message).toContain("Price: £39.99 each");
+  expect(message).toContain("Total: £79.98");
+  expect(message).toContain("/products/sample-mens-slim-jeans");
   expect(message.endsWith("Please confirm availability and delivery.")).toBe(true);
 
   const orderNumber = message.match(/Order ref: (YM-\d+)/)![1];
@@ -109,17 +87,16 @@ test("basket: add two items, validate details, order the whole basket on WhatsAp
 }) => {
   await stubWhatsApp(context);
 
-  // Item 1: unstitched (size pre-selected)
-  await page.goto("/products/sample-unstitched-lawn-3-piece");
-  await chooseAvailableColour(page);
+  // Item 1: men's slim, £39.99
+  await page.goto("/products/sample-mens-slim-jeans");
+  await chooseJeans(page);
   await page.getByRole("button", { name: "Add to basket" }).click();
   await expect(page.getByRole("dialog").getByText("Your basket")).toBeVisible();
   await page.keyboard.press("Escape");
 
-  // Item 2: stitched
-  await page.goto("/products/sample-khaddar-3-piece");
-  await chooseAvailableColour(page);
-  await chooseAvailableSize(page);
+  // Item 2: women's straight leg, on sale at £32.99
+  await page.goto("/products/sample-womens-straight-leg-jeans");
+  await chooseJeans(page);
   await page.getByRole("button", { name: "Add to basket" }).click();
   await expect(page.getByRole("dialog").getByText("2 items")).toBeVisible();
   await page.keyboard.press("Escape");
@@ -127,11 +104,13 @@ test("basket: add two items, validate details, order the whole basket on WhatsAp
 
   await page.goto("/basket");
   await expect(page.getByRole("heading", { name: "Your basket", level: 1 })).toBeVisible();
-  await expect(page.getByText("Sample Unstitched Lawn 3 Piece")).toBeVisible();
-  await expect(page.getByText("Sample Khaddar 3 Piece")).toBeVisible();
-  // £39.00 + £44.00 sale = £83.00, over the £75 free delivery threshold
-  await expect(page.getByLabel("Order summary").getByText("£83.00").last()).toBeVisible();
-  await expect(page.getByLabel("Order summary").getByText("Free")).toBeVisible();
+  await expect(page.getByText("Sample Men's Slim Jeans")).toBeVisible();
+  await expect(page.getByText("Sample Women's Straight Leg Jeans")).toBeVisible();
+  // £39.99 + £32.99 = £72.98, under the £75 free delivery threshold, so £3.99 delivery
+  const summary = page.getByLabel("Order summary");
+  await expect(summary.getByText("£72.98")).toBeVisible();
+  await expect(summary.getByText("£3.99")).toBeVisible();
+  await expect(summary.getByText("£76.97")).toBeVisible();
 
   await page.getByRole("button", { name: "Order whole basket on WhatsApp" }).click();
   const dialog = page.getByRole("dialog");
@@ -153,9 +132,9 @@ test("basket: add two items, validate details, order the whole basket on WhatsAp
   expect(message).toContain("Postcode: SW1A 1AA");
   expect(message).toContain("1. Sample ");
   expect(message).toContain("2. Sample ");
-  expect(message).toContain("Subtotal: £83.00");
-  expect(message).toContain("Delivery: Free");
-  expect(message).toContain("Total: £83.00");
+  expect(message).toContain("Subtotal: £72.98");
+  expect(message).toContain("Delivery: £3.99");
+  expect(message).toContain("Total: £76.97");
   expect(message).toContain("Note: Automated test order");
 
   // Basket is emptied after ordering
@@ -168,9 +147,9 @@ test("basket: add two items, validate details, order the whole basket on WhatsAp
 });
 
 test("floating WhatsApp button pre-fills the product on product pages", async ({ page }) => {
-  await page.goto("/products/sample-khaddar-3-piece");
+  await page.goto("/products/sample-mens-straight-jeans");
   const link = page.getByRole("link", { name: "Chat with us on WhatsApp" });
-  await expect(link).toHaveAttribute("href", /Sample%20Khaddar%203%20Piece/);
+  await expect(link).toHaveAttribute("href", /Sample%20Men's%20Straight%20Jeans/);
   await page.goto("/");
   await expect(link).toHaveAttribute("href", /I%20have%20a%20question\.$/);
 });

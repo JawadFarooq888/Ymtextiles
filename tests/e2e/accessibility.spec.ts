@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { chooseJeans } from "./helpers";
 
 /**
  * Accessibility checks from the point of view of a screen-reader / keyboard-only user,
@@ -9,9 +10,9 @@ import AxeBuilder from "@axe-core/playwright";
 
 const PAGES = [
   "/",
-  "/collections/unstitched",
-  "/products/sample-embroidered-lawn-3-piece",
-  "/search?q=lawn",
+  "/collections/women",
+  "/products/sample-mens-slim-jeans",
+  "/search?q=slim",
   "/pages/size-guide",
   "/pages/delivery-returns",
   "/basket",
@@ -84,10 +85,11 @@ test.describe("mobile, screen reader", () => {
     await expect(menuButton).toBeFocused();
   });
 
-  test("size and colour groups are named for screen readers", async ({ page }) => {
-    await page.goto("/products/sample-embroidered-lawn-3-piece");
-    await expect(page.getByRole("group", { name: /^Colour:/ })).toBeVisible();
-    await expect(page.getByRole("group", { name: /^Size:/ })).toBeVisible();
+  test("wash, waist and length groups are named for screen readers", async ({ page }) => {
+    await page.goto("/products/sample-mens-slim-jeans");
+    await expect(page.getByRole("group", { name: /^Wash:/ })).toBeVisible();
+    await expect(page.getByRole("group", { name: /^Waist:/ })).toBeVisible();
+    await expect(page.getByRole("group", { name: /^Length:/ })).toBeVisible();
     await expect(page.getByRole("group", { name: "Quantity" })).toBeVisible();
   });
 });
@@ -107,16 +109,18 @@ test.describe("desktop, keyboard only", () => {
   });
 
   test("buy a product using only the keyboard", async ({ page }) => {
-    await page.goto("/products/sample-unstitched-lawn-3-piece");
+    await page.goto("/products/sample-mens-slim-jeans");
 
-    // Choosing a colour with Space; the single size is already selected.
-    const colour = page
-      .getByRole("group", { name: /^Colour:/ })
-      .locator('button:not([aria-label*="sold out"])')
-      .first();
-    await colour.focus();
-    await page.keyboard.press("Space");
-    await expect(colour).toHaveAttribute("aria-pressed", "true");
+    // Choose wash, waist and length with the Space key.
+    const press = async (group: RegExp, selector: string) => {
+      const option = page.getByRole("group", { name: group }).locator(selector).first();
+      await option.focus();
+      await page.keyboard.press("Space");
+      await expect(option).toHaveAttribute("aria-pressed", "true");
+    };
+    await press(/^Wash:/, 'button:not([aria-label*="sold out"])');
+    await press(/^Waist:/, "button[aria-pressed]:not([disabled])");
+    await press(/^Length:/, "button[aria-pressed]:not([disabled])");
     // Stock status is in a live region so it is announced.
     await expect(
       page.locator('[aria-live="polite"]').filter({ hasText: /In stock|Only \d+ left/ }),
@@ -135,7 +139,7 @@ test.describe("desktop, keyboard only", () => {
   });
 
   test("clicking Order on WhatsApp too early explains why, in an alert", async ({ page }) => {
-    await page.goto("/products/sample-embroidered-lawn-3-piece");
+    await page.goto("/products/sample-mens-slim-jeans");
     const button = page.getByRole("button", { name: "Order on WhatsApp" });
     await button.focus();
     await page.keyboard.press("Enter");
@@ -148,12 +152,8 @@ test.describe("desktop, keyboard only", () => {
   test("basket WhatsApp form moves focus to the first error and links errors to fields", async ({
     page,
   }) => {
-    await page.goto("/products/sample-unstitched-lawn-3-piece");
-    await page
-      .getByRole("group", { name: /^Colour:/ })
-      .locator('button:not([aria-label*="sold out"])')
-      .first()
-      .click();
+    await page.goto("/products/sample-mens-slim-jeans");
+    await chooseJeans(page);
     await page.getByRole("button", { name: "Add to basket" }).click();
     await page.keyboard.press("Escape");
     await page.goto("/basket");
@@ -175,11 +175,11 @@ test.describe("desktop, keyboard only", () => {
 
   test("mega menu opens from its button and closes with Escape", async ({ page }) => {
     await page.goto("/");
-    const toggle = page.getByRole("button", { name: "Show Ready to Wear sub-categories" });
+    const toggle = page.getByRole("button", { name: "Show Men sub-categories" });
     await toggle.focus();
     await page.keyboard.press("Enter");
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
-    await expect(page.getByRole("link", { name: "Shop all Ready to Wear" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Shop all Men" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
   });

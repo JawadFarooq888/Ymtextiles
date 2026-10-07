@@ -16,7 +16,7 @@ test("all admin pages load", async ({ page }) => {
     ["/admin/products/new", "New product"],
     ["/admin/products/import", "Import products from CSV"],
     ["/admin/categories", "Categories"],
-    ["/admin/attributes", "Sizes & colours"],
+    ["/admin/attributes", "Sizes & washes"],
     ["/admin/size-charts", "Size charts"],
     ["/admin/size-charts/new", "New size chart"],
     ["/admin/banners", "Banners"],
@@ -52,8 +52,11 @@ test("admin creates a product and it appears in the shop", async ({ page }) => {
   await page.getByLabel("Product name").fill(name);
   await expect(page.getByLabel("URL slug")).toHaveValue(slug);
   await page.getByLabel("Product SKU").fill(sku);
-  await page.getByLabel("Category").selectOption({ label: "Unstitched" });
-  await page.getByLabel("Fabric", { exact: true }).fill("Lawn");
+  await page.getByLabel("Category").selectOption({ label: "Unisex" });
+  await page.getByLabel("Fit", { exact: true }).fill("Straight");
+  await page.getByLabel("Rise", { exact: true }).selectOption("Mid");
+  await page.getByLabel("Stretch", { exact: true }).selectOption("Comfort stretch");
+  await page.getByLabel("Fabric", { exact: true }).fill("98% cotton, 2% elastane");
   await page.getByLabel("Regular price (£)").fill("49.99");
   await page.getByLabel("Description", { exact: true }).fill("Created by an automated test.");
 
@@ -65,16 +68,17 @@ test("admin creates a product and it appears in the shop", async ({ page }) => {
   });
   await expect(page.getByLabel("Image 1 alt text")).toHaveValue(name);
 
-  // Variant matrix: M and L in Green
-  await page.getByRole("checkbox", { name: "M", exact: true }).click();
-  await page.getByRole("checkbox", { name: "L", exact: true }).click();
-  await page.getByRole("checkbox", { name: "Green", exact: true }).click();
+  // Variant matrix: waists W30 and W32, length L30, in Black
+  await page.getByRole("checkbox", { name: "W30", exact: true }).click();
+  await page.getByRole("checkbox", { name: "W32", exact: true }).click();
+  await page.getByRole("checkbox", { name: "L30", exact: true }).click();
+  await page.getByRole("checkbox", { name: "Black", exact: true }).click();
   await page.getByRole("button", { name: "Generate variants" }).click();
-  await expect(page.getByLabel("SKU for M Green")).toHaveValue(`${sku}-M-GRN`);
-  await expect(page.getByLabel("SKU for L Green")).toHaveValue(`${sku}-L-GRN`);
+  await expect(page.getByLabel("SKU for W30 L30 Black")).toHaveValue(`${sku}-W30L30-BLC`);
+  await expect(page.getByLabel("SKU for W32 L30 Black")).toHaveValue(`${sku}-W32L30-BLC`);
   await page.getByLabel("Set stock for all rows").fill("5");
   await page.getByRole("button", { name: "Apply" }).click();
-  await expect(page.getByLabel("Stock for M Green")).toHaveValue("5");
+  await expect(page.getByLabel("Stock for W30 L30 Black")).toHaveValue("5");
 
   await page.getByRole("button", { name: "Create product" }).click();
   await expect(page).toHaveURL(/\/admin\/products\/[a-z0-9]+$/);
@@ -85,8 +89,10 @@ test("admin creates a product and it appears in the shop", async ({ page }) => {
   await page.goto(`/products/${slug}`);
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await expect(page.getByText("£49.99").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "M", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "L", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "W30", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "W32", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "L30", exact: true })).toBeVisible();
+  await expect(page.getByText("Straight fit")).toBeVisible();
   await expect(page.getByRole("img", { name: name })).toBeVisible();
 
   // Clean up
