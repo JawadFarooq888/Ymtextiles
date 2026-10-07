@@ -36,12 +36,12 @@ export default async function HomePage() {
       ) : (
         <section className="bg-primary px-4 py-24 text-center text-primary-foreground">
           <h1 className="font-heading text-5xl text-brand-ivory">YM TEXTILES</h1>
-          <p className="mt-3">Pakistani clothing, stocked in the UK.</p>
+          <p className="mt-3">{settings.footerTagline}</p>
         </section>
       )}
 
       <JsonLd data={organizationJsonLd(settings)} />
-      <h1 className="sr-only">YM Textiles: Pakistani clothing in the UK</h1>
+      <h1 className="sr-only">{settings.seoTitle}</h1>
 
       {tree.length ? (
         <section className="mx-auto max-w-7xl px-4 pt-16" aria-labelledby="shop-by-category">

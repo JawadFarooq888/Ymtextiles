@@ -34,7 +34,10 @@ export default function ImportProductsPage() {
               <code>base_price</code>. Prices are in pounds, e.g. <code>45.00</code>.
             </li>
             <li>
-              <code>type</code> is Stitched or Unstitched. Yes/no columns accept yes or no.
+              <code>size</code> like <code>W32 L30</code> (waist and length in inches) or a kids
+              size like <code>7-8Y</code>. <code>rise</code> is Low, Mid or High;{" "}
+              <code>stretch</code> is No stretch, Comfort stretch or Super stretch. Yes/no columns
+              accept yes or no.
             </li>
             <li>
               <code>image_urls</code>: Cloudinary links separated by <code>|</code>. They are only

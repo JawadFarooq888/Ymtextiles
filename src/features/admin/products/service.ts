@@ -1,6 +1,7 @@
 import "server-only";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { FIT_SUGGESTIONS } from "@/features/catalog/jeans";
 import { deleteCloudinaryImage } from "@/lib/cloudinary";
 import type { ProductData } from "@/features/admin/products/schema";
 
@@ -90,18 +91,26 @@ export function getProductForEdit(id: string) {
 }
 
 export async function getProductFormOptions() {
-  const [categories, sizes, colours, sizeCharts, fabrics] = await Promise.all([
+  const [categories, sizes, colours, sizeCharts, fabrics, fits] = await Promise.all([
     db.category.findMany({
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true, parentId: true },
     }),
-    db.size.findMany({ orderBy: { sortOrder: "asc" }, select: { id: true, label: true } }),
+    db.size.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, label: true, waist: true, length: true },
+    }),
     db.colour.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, hex: true } }),
     db.sizeChart.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.product.findMany({
       where: { fabric: { not: null } },
       distinct: ["fabric"],
       select: { fabric: true },
+    }),
+    db.product.findMany({
+      where: { fit: { not: null } },
+      distinct: ["fit"],
+      select: { fit: true },
     }),
   ]);
   const byId = new Map(categories.map((c) => [c.id, c]));
@@ -120,6 +129,9 @@ export async function getProductFormOptions() {
       .map((f) => f.fabric)
       .filter((f): f is string => !!f)
       .sort(),
+    fits: [
+      ...new Set([...FIT_SUGGESTIONS, ...fits.map((f) => f.fit).filter((f): f is string => !!f)]),
+    ],
   };
 }
 

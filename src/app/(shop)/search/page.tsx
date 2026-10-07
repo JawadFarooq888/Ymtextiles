@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           type="search"
           defaultValue={q}
           autoFocus={!q}
-          placeholder="Try lawn, chiffon, embroidered..."
+          placeholder="Try skinny, black, high rise..."
           className="h-12 flex-1 rounded-full border border-input bg-background px-5 text-base"
         />
         <button
@@ -58,7 +58,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             <ProductGrid products={results} priorityCount={4} />
           ) : (
             <p className="rounded-2xl bg-secondary p-8 text-center">
-              Nothing found. Try another word, such as a fabric (lawn, chiffon) or style.
+              Nothing found. Try another word, such as a fit (slim, straight), a wash (black, light
+              blue) or a rise.
             </p>
           )}
         </section>

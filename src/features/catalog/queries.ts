@@ -23,8 +23,9 @@ export const getCatalogIndex = unstable_cache(
           sku: true,
           categoryId: true,
           fabric: true,
-          pieces: true,
-          type: true,
+          fit: true,
+          rise: true,
+          stretch: true,
           basePrice: true,
           salePrice: true,
           isNew: true,
@@ -59,7 +60,8 @@ export const getCatalogIndex = unstable_cache(
       colours,
     };
   },
-  ["catalog-index"],
+  // Bump when CatalogIndex changes shape (Vercel keeps cached entries across deploys).
+  ["catalog-index", "v2"],
   { tags: [TAGS.catalog, TAGS.attributes, TAGS.categories] },
 );
 
@@ -117,8 +119,9 @@ export function getProductBySlug(slug: string) {
           description: true,
           careDetails: true,
           fabric: true,
-          pieces: true,
-          type: true,
+          fit: true,
+          rise: true,
+          stretch: true,
           basePrice: true,
           salePrice: true,
           categoryId: true,
@@ -140,16 +143,18 @@ export function getProductBySlug(slug: string) {
               sku: true,
               stock: true,
               priceOverride: true,
-              size: { select: { id: true, label: true, sortOrder: true } },
+              size: {
+                select: { id: true, label: true, waist: true, length: true, sortOrder: true },
+              },
               colour: { select: { id: true, name: true, hex: true } },
             },
           },
-          sizeChart: { select: { name: true, rows: true, notes: true } },
+          sizeChart: { select: { name: true, columns: true, rows: true, notes: true } },
         },
       });
       return product;
     },
-    ["product-by-slug", slug],
+    ["product-by-slug", "v2", slug],
     { tags: [TAGS.catalog, TAGS.product(slug)] },
   )();
 }
@@ -157,7 +162,7 @@ export function getProductBySlug(slug: string) {
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
 /**
- * Full-text search over name, fabric, tags and description, with prefix matching
+ * Full-text search over name, fabric, fit, rise, stretch, tags and description, with prefix matching
  * so partial words ("embro") work. Returns product ids ranked by relevance.
  */
 export async function searchProductIds(query: string): Promise<string[]> {
@@ -179,7 +184,7 @@ export async function searchProductIds(query: string): Promise<string[]> {
     CROSS JOIN LATERAL (
       SELECT
         setweight(to_tsvector('english', p.name), 'A') ||
-        setweight(to_tsvector('english', coalesce(p.fabric, '')), 'B') ||
+        setweight(to_tsvector('english', coalesce(p.fabric, '') || ' ' || coalesce(p.fit, '') || ' ' || coalesce(p.rise, '') || ' ' || coalesce(p.stretch, '')), 'B') ||
         setweight(to_tsvector('english', array_to_string(p.tags, ' ')), 'B') ||
         setweight(to_tsvector('english', c.name), 'C') ||
         setweight(to_tsvector('english', p.description), 'D') AS doc

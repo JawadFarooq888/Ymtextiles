@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 // Default image when the site or a page without its own photo is shared (WhatsApp, Facebook...).
-export const alt = "YM Textiles: Pakistani clothing, stocked in the UK";
+export const alt = "YM Textiles: jeans for men, women and kids, stocked in the UK";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -22,7 +22,7 @@ export default function OpenGraphImage() {
     >
       <div style={{ fontSize: 96, letterSpacing: 24 }}>YM TEXTILES</div>
       <div style={{ marginTop: 24, fontSize: 36, color: "#f2eadb" }}>
-        Pakistani clothing, stocked in the UK
+        Jeans for men, women and kids
       </div>
       <div
         style={{
@@ -34,7 +34,7 @@ export default function OpenGraphImage() {
           fontSize: 28,
         }}
       >
-        Lawn · Ready to wear · Unstitched · Formal
+        Skinny · Slim · Straight · Wide leg
       </div>
     </div>,
     size,

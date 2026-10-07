@@ -48,7 +48,12 @@ export const productSchema = z
     sku: skuSchema,
     description: z.string().trim().max(5000),
     careDetails: optionalText(2000),
-    fabric: optionalText(40),
+    fabric: optionalText(80),
+    fit: optionalText(40),
+    rise: z.enum(["", "Low", "Mid", "High"]).transform((v) => (v === "" ? null : v)),
+    stretch: z
+      .enum(["", "No stretch", "Comfort stretch", "Super stretch"])
+      .transform((v) => (v === "" ? null : v)),
     pieces: z.enum(["", "1", "2", "3"]).transform((v) => (v === "" ? null : Number(v))),
     type: z.enum(["STITCHED", "UNSTITCHED"]),
     basePrice: poundsRequired,
@@ -107,7 +112,7 @@ export const productSchema = z
 export type ProductFormValues = z.input<typeof productSchema>;
 export type ProductData = z.output<typeof productSchema>;
 
-/** Short code used in variant SKUs, e.g. "Unstitched" -> "UNS", "Green" -> "GRN". */
+/** Short code used in variant SKUs, e.g. "Black" -> "BLC", "Light Blue" -> "LGH". */
 export function attributeCode(label: string): string {
   const clean = label.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (clean.length <= 3) return clean || "X";
@@ -115,6 +120,15 @@ export function attributeCode(label: string): string {
   return (consonants.length >= 3 ? consonants : clean).slice(0, 3);
 }
 
+/** "W32 L30" -> "W32L30"; other sizes use the 3-letter code. */
+function sizeCode(label: string): string {
+  const jeans = label
+    .trim()
+    .toUpperCase()
+    .match(/^W\s*(\d+)\s*L\s*(\d+)$/);
+  return jeans ? `W${jeans[1]}L${jeans[2]}` : attributeCode(label);
+}
+
 export function variantSku(productSku: string, sizeLabel: string, colourName: string): string {
-  return `${productSku}-${attributeCode(sizeLabel)}-${attributeCode(colourName)}`.toUpperCase();
+  return `${productSku}-${sizeCode(sizeLabel)}-${attributeCode(colourName)}`.toUpperCase();
 }

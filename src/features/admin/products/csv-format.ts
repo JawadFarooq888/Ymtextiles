@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parsePoundsToPence, penceToPoundsInput } from "@/lib/money";
+import { RISES, STRETCHES } from "@/features/catalog/jeans";
 
 /**
  * Bulk CSV format: one row per variant (size + colour).
@@ -11,9 +12,10 @@ export const CSV_COLUMNS = [
   "name",
   "slug",
   "category_slug",
+  "fit",
+  "rise",
+  "stretch",
   "fabric",
-  "pieces",
-  "type",
   "base_price",
   "sale_price",
   "description",
@@ -78,26 +80,31 @@ export const csvRowSchema = z.object({
   name: text(120),
   slug: text(80),
   category_slug: text(80),
-  fabric: text(40),
-  pieces: z
+  fit: text(40),
+  rise: z
     .string()
     .trim()
     .transform((v, ctx) => {
       if (v === "") return undefined;
-      if (["1", "2", "3"].includes(v)) return Number(v);
-      ctx.addIssue({ code: "custom", message: "pieces must be 1, 2 or 3" });
+      const match = RISES.find((r) => r.toLowerCase() === v.toLowerCase().replace(/ rise$/, ""));
+      if (match) return match;
+      ctx.addIssue({ code: "custom", message: "rise must be Low, Mid or High" });
       return z.NEVER;
     }),
-  type: z
+  stretch: z
     .string()
     .trim()
-    .toUpperCase()
     .transform((v, ctx) => {
       if (v === "") return undefined;
-      if (v === "STITCHED" || v === "UNSTITCHED") return v;
-      ctx.addIssue({ code: "custom", message: "type must be Stitched or Unstitched" });
+      const match = STRETCHES.find((st) => st.toLowerCase() === v.toLowerCase());
+      if (match) return match;
+      ctx.addIssue({
+        code: "custom",
+        message: `stretch must be one of: ${STRETCHES.join(", ")}`,
+      });
       return z.NEVER;
     }),
+  fabric: text(80),
   base_price: pounds,
   sale_price: pounds,
   description: text(5000),
@@ -163,9 +170,10 @@ export interface ExportVariant {
     name: string;
     slug: string;
     categorySlug: string;
+    fit: string | null;
+    rise: string | null;
+    stretch: string | null;
     fabric: string | null;
-    pieces: number | null;
-    type: string;
     basePrice: number;
     salePrice: number | null;
     description: string;
@@ -192,9 +200,10 @@ export function toCsvRows(variants: ExportVariant[]): CsvRow[] {
     name: v.product.name,
     slug: v.product.slug,
     category_slug: v.product.categorySlug,
+    fit: v.product.fit ?? "",
+    rise: v.product.rise ?? "",
+    stretch: v.product.stretch ?? "",
     fabric: v.product.fabric ?? "",
-    pieces: v.product.pieces?.toString() ?? "",
-    type: v.product.type === "UNSTITCHED" ? "Unstitched" : "Stitched",
     base_price: penceToPoundsInput(v.product.basePrice),
     sale_price: penceToPoundsInput(v.product.salePrice),
     description: v.product.description,

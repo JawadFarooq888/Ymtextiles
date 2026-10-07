@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,22 +13,32 @@ import { Field, errorProps } from "@/features/admin/components/field";
 import { saveSizeChartAction } from "@/features/admin/size-charts/actions";
 import { sizeChartSchema, type SizeChartFormValues } from "@/features/admin/size-charts/schema";
 
-const COLUMNS = [
-  { key: "chest", label: "Chest" },
-  { key: "length", label: "Length" },
-  { key: "sleeve", label: "Sleeve" },
-  { key: "trouserLength", label: "Shalwar / trouser" },
-] as const;
-
 export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
   const router = useRouter();
-  const { register, control, handleSubmit, formState, getValues } = useForm<
+  const { register, control, handleSubmit, formState, getValues, setValue, watch } = useForm<
     SizeChartFormValues,
     unknown,
     z.output<typeof sizeChartSchema>
   >({ resolver: zodResolver(sizeChartSchema), defaultValues: initial });
-  const rows = useFieldArray({ control, name: "rows" });
+  const columns = useFieldArray({ control, name: "columns", keyName: "fieldKey" });
+  const rows = useFieldArray({ control, name: "rows", keyName: "fieldKey" });
   const errors = formState.errors;
+  const columnNames = watch("columns");
+
+  // Adding or removing a column changes every row, so rows always have one value per column.
+  function addColumn() {
+    columns.append({ name: "" });
+    getValues("rows").forEach((r, i) => setValue(`rows.${i}.values`, [...r.values, ""]));
+  }
+  function removeColumn(index: number) {
+    columns.remove(index);
+    getValues("rows").forEach((r, i) =>
+      setValue(
+        `rows.${i}.values`,
+        r.values.filter((_, j) => j !== index),
+      ),
+    );
+  }
 
   const onSubmit = handleSubmit(async () => {
     const result = await saveSizeChartAction(getValues());
@@ -38,6 +48,12 @@ export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
     } else toast.error(result.error);
   });
 
+  const tableError =
+    errors.rows?.message ??
+    errors.rows?.root?.message ??
+    errors.columns?.message ??
+    errors.columns?.root?.message;
+
   return (
     <form
       onSubmit={onSubmit}
@@ -45,7 +61,7 @@ export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
       noValidate
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Name" htmlFor="sc-name" error={errors.name?.message}>
+        <Field label="Name" htmlFor="sc-name" error={errors.name?.message} hint="e.g. Men's jeans">
           <Input
             id="sc-name"
             {...register("name")}
@@ -62,39 +78,60 @@ export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium text-brand-ink">Measurements in inches</p>
+        <p className="mb-1 text-sm font-medium text-brand-ink">Measurements in inches</p>
         <p className="mb-3 text-xs text-muted-foreground">
-          The shop shows both inches and centimetres automatically.
+          The shop shows inches and centimetres automatically. Leave a box empty if it does not
+          apply.
         </p>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground">
                 <th className="p-1 font-medium">Size</th>
-                {COLUMNS.map((c) => (
-                  <th key={c.key} className="p-1 font-medium">
-                    {c.label}
+                {columns.fields.map((col, j) => (
+                  <th key={col.fieldKey} className="p-1 font-medium">
+                    <div className="flex items-center gap-1">
+                      <Input
+                        aria-label={`Column ${j + 1} name`}
+                        placeholder="Column name"
+                        className="h-8 text-xs"
+                        {...register(`columns.${j}.name`)}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        aria-label={`Remove column ${columnNames?.[j]?.name || j + 1}`}
+                        onClick={() => removeColumn(j)}
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
                   </th>
                 ))}
                 <th className="p-1">
-                  <span className="sr-only">Remove</span>
+                  <Button type="button" variant="outline" size="sm" onClick={addColumn}>
+                    <PlusIcon /> Column
+                  </Button>
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.fields.map((row, i) => (
-                <tr key={row.id}>
+                <tr key={row.fieldKey}>
                   <td className="p-1">
-                    <Input aria-label={`Row ${i + 1} size`} {...register(`rows.${i}.size`)} />
+                    <Input
+                      aria-label={`Row ${i + 1} size`}
+                      placeholder="W32"
+                      {...register(`rows.${i}.size`)}
+                    />
                   </td>
-                  {COLUMNS.map((c) => (
-                    <td key={c.key} className="p-1">
+                  {columns.fields.map((col, j) => (
+                    <td key={col.fieldKey} className="p-1">
                       <Input
-                        type="number"
-                        step="0.25"
-                        min={0}
-                        aria-label={`Row ${i + 1} ${c.label}`}
-                        {...register(`rows.${i}.${c.key}`)}
+                        inputMode="decimal"
+                        aria-label={`Row ${i + 1} ${columnNames?.[j]?.name || `column ${j + 1}`}`}
+                        {...register(`rows.${i}.values.${j}`)}
                       />
                     </td>
                   ))}
@@ -114,9 +151,9 @@ export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
             </tbody>
           </table>
         </div>
-        {errors.rows?.message || errors.rows?.root?.message ? (
+        {tableError ? (
           <p role="alert" className="mt-2 text-xs text-destructive">
-            {errors.rows?.message ?? errors.rows?.root?.message}
+            {tableError}
           </p>
         ) : null}
         <Button
@@ -124,9 +161,7 @@ export function SizeChartForm({ initial }: { initial: SizeChartFormValues }) {
           variant="outline"
           size="sm"
           className="mt-3"
-          onClick={() =>
-            rows.append({ size: "", chest: "", length: "", sleeve: "", trouserLength: "" })
-          }
+          onClick={() => rows.append({ size: "", values: columns.fields.map(() => "") })}
         >
           <PlusIcon /> Add row
         </Button>

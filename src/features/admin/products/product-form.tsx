@@ -20,13 +20,15 @@ import {
   type ProductFormValues,
 } from "@/features/admin/products/schema";
 import { slugify } from "@/lib/slug";
+import { RISES, STRETCHES } from "@/features/catalog/jeans";
 
 export interface ProductFormOptions {
   categories: { id: string; label: string }[];
-  sizes: { id: string; label: string }[];
+  sizes: { id: string; label: string; waist: number | null; length: number | null }[];
   colours: { id: string; name: string; hex: string }[];
   sizeCharts: { id: string; name: string }[];
   fabrics: string[];
+  fits: string[];
 }
 
 const selectClass = "border-input bg-background h-9 w-full rounded-lg border px-3 text-sm";
@@ -106,17 +108,39 @@ export function ProductForm({
             ))}
           </select>
         </Field>
-        <Field label="Type" htmlFor="p-type">
-          <select id="p-type" className={selectClass} {...register("type")}>
-            <option value="STITCHED">Stitched (ready to wear)</option>
-            <option value="UNSTITCHED">Unstitched</option>
+        <Field label="Fit" htmlFor="p-fit" error={err("fit")} hint="Pick one or type your own">
+          <Input id="p-fit" list="fit-options" {...register("fit")} />
+          <datalist id="fit-options">
+            {options.fits.map((f) => (
+              <option key={f} value={f} />
+            ))}
+          </datalist>
+        </Field>
+        <Field label="Rise" htmlFor="p-rise">
+          <select id="p-rise" className={selectClass} {...register("rise")}>
+            <option value="">Not specified</option>
+            {RISES.map((r) => (
+              <option key={r} value={r}>
+                {r} rise
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Stretch" htmlFor="p-stretch">
+          <select id="p-stretch" className={selectClass} {...register("stretch")}>
+            <option value="">Not specified</option>
+            {STRETCHES.map((st) => (
+              <option key={st} value={st}>
+                {st}
+              </option>
+            ))}
           </select>
         </Field>
         <Field
           label="Fabric"
           htmlFor="p-fabric"
           error={err("fabric")}
-          hint="e.g. Lawn, Chiffon, Khaddar"
+          hint="e.g. 98% cotton, 2% elastane"
         >
           <Input id="p-fabric" list="fabric-options" {...register("fabric")} />
           <datalist id="fabric-options">
@@ -124,14 +148,6 @@ export function ProductForm({
               <option key={f} value={f} />
             ))}
           </datalist>
-        </Field>
-        <Field label="Pieces" htmlFor="p-pieces">
-          <select id="p-pieces" className={selectClass} {...register("pieces")}>
-            <option value="">Not specified</option>
-            <option value="1">1 piece</option>
-            <option value="2">2 piece</option>
-            <option value="3">3 piece</option>
-          </select>
         </Field>
         <Field
           label="Description"

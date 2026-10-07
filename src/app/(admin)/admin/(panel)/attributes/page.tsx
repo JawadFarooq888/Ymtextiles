@@ -20,7 +20,7 @@ export default async function AttributesPage() {
   return (
     <>
       <PageHeader
-        title="Sizes & colours"
+        title="Sizes & washes"
         description="Used to build product variants. Items in use by variants cannot be deleted."
       />
       <div className="grid gap-6 lg:grid-cols-2">
@@ -46,7 +46,13 @@ export default async function AttributesPage() {
                     Order {s.sortOrder} · {s._count.variants} variant(s)
                   </span>
                   <SizeDialog
-                    initial={{ id: s.id, label: s.label, sortOrder: String(s.sortOrder) }}
+                    initial={{
+                      id: s.id,
+                      label: s.label,
+                      waist: s.waist?.toString() ?? "",
+                      length: s.length?.toString() ?? "",
+                      sortOrder: String(s.sortOrder),
+                    }}
                     trigger={
                       <Button variant="ghost" size="icon-sm" aria-label={`Edit size ${s.label}`}>
                         <PencilIcon />

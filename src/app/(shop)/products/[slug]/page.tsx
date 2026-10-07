@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { z } from "zod";
 import { ChevronDownIcon } from "lucide-react";
 import { Breadcrumbs } from "@/features/catalog/components/breadcrumbs";
 import { ProductGrid } from "@/features/catalog/components/product-card";
@@ -9,6 +8,7 @@ import { getCatalogIndex, getProductBySlug } from "@/features/catalog/queries";
 import { ProductPurchase } from "@/features/product/components/product-purchase";
 import { SetFloatingWhatsAppMessage } from "@/features/whatsapp/floating-whatsapp";
 import { getSiteUrl } from "@/lib/site";
+import { parseSizeChart } from "@/features/size-charts/chart";
 import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import { SizeChartDialog } from "@/features/product/components/size-chart-dialog";
 import { formatPence } from "@/lib/money";
@@ -16,16 +16,6 @@ import { getSettings } from "@/lib/settings";
 import { cloudinaryUrl } from "@/lib/image";
 
 type Params = Promise<{ slug: string }>;
-
-const sizeChartRows = z.array(
-  z.object({
-    size: z.string(),
-    chest: z.number(),
-    length: z.number(),
-    sleeve: z.number(),
-    trouserLength: z.number(),
-  }),
-);
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
@@ -59,12 +49,12 @@ export default async function ProductPage({ params }: { params: Params }) {
   ]);
   if (!product) notFound();
 
-  const chartRows = product.sizeChart ? sizeChartRows.safeParse(product.sizeChart.rows) : null;
+  const chart = product.sizeChart
+    ? parseSizeChart(product.sizeChart.columns, product.sizeChart.rows)
+    : null;
   const related = [
     ...index.products.filter((p) => p.categoryId === product.categoryId && p.id !== product.id),
-    ...index.products.filter(
-      (p) => p.categoryId !== product.categoryId && p.fabric === product.fabric,
-    ),
+    ...index.products.filter((p) => p.categoryId !== product.categoryId && p.fit === product.fit),
   ]
     .filter((p, i, all) => all.findIndex((x) => x.id === p.id) === i)
     .slice(0, 4);
@@ -84,9 +74,9 @@ export default async function ProductPage({ params }: { params: Params }) {
   ];
 
   const eyebrow = [
-    product.fabric,
-    product.pieces ? `${product.pieces} piece` : null,
-    product.type === "UNSTITCHED" ? "Unstitched" : "Stitched",
+    product.fit ? `${product.fit} fit` : null,
+    product.rise ? `${product.rise} rise` : null,
+    product.stretch,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -140,10 +130,10 @@ export default async function ProductPage({ params }: { params: Params }) {
           </>
         }
         sizeChartTrigger={
-          product.sizeChart && chartRows?.success && chartRows.data.length ? (
+          product.sizeChart && chart ? (
             <SizeChartDialog
               name={product.sizeChart.name}
-              rows={chartRows.data}
+              chart={chart}
               notes={product.sizeChart.notes}
             />
           ) : (
@@ -162,13 +152,12 @@ export default async function ProductPage({ params }: { params: Params }) {
               <p className="whitespace-pre-line">{product.description}</p>
             </Accordion>
           ) : null}
-          <Accordion title="Fabric and care">
+          <Accordion title="Fit, fabric and care">
             <ul className="grid gap-1">
+              {product.fit ? <li>Fit: {product.fit}</li> : null}
+              {product.rise ? <li>Rise: {product.rise}</li> : null}
+              {product.stretch ? <li>Stretch: {product.stretch}</li> : null}
               {product.fabric ? <li>Fabric: {product.fabric}</li> : null}
-              {product.pieces ? <li>{product.pieces} piece</li> : null}
-              <li>
-                {product.type === "UNSTITCHED" ? "Unstitched fabric" : "Stitched, ready to wear"}
-              </li>
               <li>SKU: {product.sku}</li>
             </ul>
             {product.careDetails ? (

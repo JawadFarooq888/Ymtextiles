@@ -27,7 +27,7 @@ interface Props {
   getValues: UseFormGetValues<ProductFormValues>;
   setValue: UseFormSetValue<ProductFormValues>;
   errors: FieldErrors<ProductFormValues>;
-  sizes: { id: string; label: string }[];
+  sizes: { id: string; label: string; waist: number | null; length: number | null }[];
   colours: { id: string; name: string; hex: string }[];
 }
 
@@ -45,18 +45,39 @@ export function VariantMatrixField({
     name: "variants",
     keyName: "fieldKey",
   });
-  const [pickedSizes, setPickedSizes] = useState<Set<string>>(
-    () => new Set(getValues("variants").map((v) => v.sizeId)),
+  const sizeById = new Map(sizes.map((s) => [s.id, s]));
+  const jeansSizes = sizes.filter((s) => s.waist !== null && s.length !== null);
+  const otherSizes = sizes.filter((s) => s.waist === null || s.length === null);
+  const waists = [...new Set(jeansSizes.map((s) => s.waist!))].sort((a, b) => a - b);
+  const lengths = [...new Set(jeansSizes.map((s) => s.length!))].sort((a, b) => a - b);
+  const existingSizes = getValues("variants").map((v) => sizeById.get(v.sizeId));
+
+  const [pickedWaists, setPickedWaists] = useState<Set<number>>(
+    () => new Set(existingSizes.flatMap((s) => (s?.waist != null ? [s.waist] : []))),
+  );
+  const [pickedLengths, setPickedLengths] = useState<Set<number>>(
+    () => new Set(existingSizes.flatMap((s) => (s?.length != null ? [s.length] : []))),
+  );
+  const [pickedOther, setPickedOther] = useState<Set<string>>(
+    () =>
+      new Set(
+        existingSizes.flatMap((s) => (s && (s.waist === null || s.length === null) ? [s.id] : [])),
+      ),
   );
   const [pickedColours, setPickedColours] = useState<Set<string>>(
     () => new Set(getValues("variants").map((v) => v.colourId)),
   );
   const [bulkStock, setBulkStock] = useState("");
 
-  const sizeById = new Map(sizes.map((s) => [s.id, s]));
   const colourById = new Map(colours.map((c) => [c.id, c]));
 
-  function toggle(set: Set<string>, id: string, update: (s: Set<string>) => void) {
+  /** Sizes for the picked waists × lengths (only combinations that exist in Sizes) plus other picked sizes. */
+  const chosenSizes = [
+    ...jeansSizes.filter((s) => pickedWaists.has(s.waist!) && pickedLengths.has(s.length!)),
+    ...otherSizes.filter((s) => pickedOther.has(s.id)),
+  ];
+
+  function toggle<T>(set: Set<T>, id: T, update: (s: Set<T>) => void) {
     const next = new Set(set);
     if (next.has(id)) next.delete(id);
     else next.add(id);
@@ -73,7 +94,7 @@ export function VariantMatrixField({
     }
     const existing = new Set(getValues("variants").map((v) => `${v.sizeId}:${v.colourId}`));
     let added = 0;
-    for (const size of sizes.filter((s) => pickedSizes.has(s.id))) {
+    for (const size of chosenSizes) {
       for (const colour of colours.filter((c) => pickedColours.has(c.id))) {
         if (existing.has(`${size.id}:${colour.id}`)) continue;
         append({
@@ -104,25 +125,73 @@ export function VariantMatrixField({
   return (
     <div className="grid gap-5">
       <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4">
+          {waists.length ? (
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-brand-ink">Waist</legend>
+              <div className="flex flex-wrap gap-2">
+                {waists.map((w) => (
+                  <Label
+                    key={w}
+                    className="flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-normal has-[[data-state=checked]]:border-primary"
+                  >
+                    <Checkbox
+                      checked={pickedWaists.has(w)}
+                      onCheckedChange={() => toggle(pickedWaists, w, setPickedWaists)}
+                    />
+                    W{w}
+                  </Label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          {lengths.length ? (
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-brand-ink">Length</legend>
+              <div className="flex flex-wrap gap-2">
+                {lengths.map((l) => (
+                  <Label
+                    key={l}
+                    className="flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-normal has-[[data-state=checked]]:border-primary"
+                  >
+                    <Checkbox
+                      checked={pickedLengths.has(l)}
+                      onCheckedChange={() => toggle(pickedLengths, l, setPickedLengths)}
+                    />
+                    L{l}
+                  </Label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          {otherSizes.length ? (
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-brand-ink">
+                {jeansSizes.length ? "Other sizes (e.g. kids)" : "Sizes"}
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {otherSizes.map((sz) => (
+                  <Label
+                    key={sz.id}
+                    className="flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-normal has-[[data-state=checked]]:border-primary"
+                  >
+                    <Checkbox
+                      checked={pickedOther.has(sz.id)}
+                      onCheckedChange={() => toggle(pickedOther, sz.id, setPickedOther)}
+                    />
+                    {sz.label}
+                  </Label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          <p className="text-xs text-muted-foreground">
+            Waist × length sizes come from Admin → Sizes &amp; washes. {chosenSizes.length} size(s)
+            selected.
+          </p>
+        </div>
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-brand-ink">Sizes</legend>
-          <div className="flex flex-wrap gap-2">
-            {sizes.map((s) => (
-              <Label
-                key={s.id}
-                className="flex min-h-9 cursor-pointer items-center gap-2 rounded-full border px-3 text-sm font-normal has-[[data-state=checked]]:border-primary"
-              >
-                <Checkbox
-                  checked={pickedSizes.has(s.id)}
-                  onCheckedChange={() => toggle(pickedSizes, s.id, setPickedSizes)}
-                />
-                {s.label}
-              </Label>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="mb-2 text-sm font-medium text-brand-ink">Colours</legend>
+          <legend className="mb-2 text-sm font-medium text-brand-ink">Washes / colours</legend>
           <div className="flex flex-wrap gap-2">
             {colours.map((c) => (
               <Label
@@ -149,7 +218,7 @@ export function VariantMatrixField({
         <Button
           type="button"
           onClick={generate}
-          disabled={!pickedSizes.size || !pickedColours.size}
+          disabled={!chosenSizes.length || !pickedColours.size}
         >
           <WandSparklesIcon /> Generate variants
         </Button>

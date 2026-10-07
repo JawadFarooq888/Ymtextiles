@@ -6,8 +6,9 @@ export interface CatalogProduct {
   sku: string;
   categoryId: string;
   fabric: string | null;
-  pieces: number | null;
-  type: "STITCHED" | "UNSTITCHED";
+  fit: string | null;
+  rise: string | null;
+  stretch: string | null;
   basePrice: number;
   salePrice: number | null;
   /** salePrice ?? basePrice, in pence */
@@ -27,6 +28,9 @@ export interface CatalogProduct {
 export interface CatalogSize {
   id: string;
   label: string;
+  /** inches; both set for jeans sizes like "W32 L30", null for e.g. kids "7-8Y" */
+  waist: number | null;
+  length: number | null;
   sortOrder: number;
 }
 

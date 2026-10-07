@@ -10,22 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { SizeChartData } from "@/features/size-charts/chart";
 import { cn } from "@/lib/utils";
-
-export interface SizeChartRow {
-  size: string;
-  chest: number;
-  length: number;
-  sleeve: number;
-  trouserLength: number;
-}
-
-const COLUMNS = [
-  { key: "chest", label: "Chest" },
-  { key: "length", label: "Length" },
-  { key: "sleeve", label: "Sleeve" },
-  { key: "trouserLength", label: "Shalwar / trouser" },
-] as const;
 
 /** Round centimetres to the nearest 0.5. */
 function toCm(inches: number) {
@@ -33,11 +19,11 @@ function toCm(inches: number) {
 }
 
 export function SizeChartTable({
-  rows,
+  chart,
   notes,
   name = "Size chart",
 }: {
-  rows: SizeChartRow[];
+  chart: SizeChartData;
   notes?: string | null;
   name?: string;
 }) {
@@ -80,24 +66,27 @@ export function SizeChartTable({
               <th scope="col" className="p-3 text-left font-medium">
                 Size
               </th>
-              {COLUMNS.map((c) => (
-                <th key={c.key} scope="col" className="p-3 text-left font-medium">
-                  {c.label}
+              {chart.columns.map((c) => (
+                <th key={c} scope="col" className="p-3 text-left font-medium">
+                  {c}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {chart.rows.map((r) => (
               <tr key={r.size} className="border-t">
                 <th scope="row" className="p-3 text-left font-medium text-brand-ink">
                   {r.size}
                 </th>
-                {COLUMNS.map((c) => (
-                  <td key={c.key} className="p-3">
-                    {unit === "in" ? r[c.key] : toCm(r[c.key])}
-                  </td>
-                ))}
+                {chart.columns.map((c, i) => {
+                  const value = r.values[i];
+                  return (
+                    <td key={c} className="p-3">
+                      {value == null ? "–" : unit === "in" ? value : toCm(value)}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -110,11 +99,11 @@ export function SizeChartTable({
 
 export function SizeChartDialog({
   name,
-  rows,
+  chart,
   notes,
 }: {
   name: string;
-  rows: SizeChartRow[];
+  chart: SizeChartData;
   notes?: string | null;
 }) {
   return (
@@ -130,9 +119,11 @@ export function SizeChartDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl">{name}</DialogTitle>
-          <DialogDescription>Garment measurements for each size.</DialogDescription>
+          <DialogDescription>
+            Measurements of the jeans, laid flat. Compare with a pair that fits you well.
+          </DialogDescription>
         </DialogHeader>
-        <SizeChartTable rows={rows} notes={notes} name={name} />
+        <SizeChartTable chart={chart} notes={notes} name={name} />
       </DialogContent>
     </Dialog>
   );

@@ -32,7 +32,7 @@ export function SettingsForm({ initial }: { initial: SettingsFormValues }) {
   });
 
   const toggle = (
-    key: "whatsappUkOnly" | "menuShowNewIn" | "menuShowLawn" | "menuShowSale",
+    key: "whatsappUkOnly" | "menuShowNewIn" | "menuShowBestSellers" | "menuShowSale",
     label: string,
     hint: string,
   ) => (
@@ -129,7 +129,7 @@ export function SettingsForm({ initial }: { initial: SettingsFormValues }) {
 
       <Section title="Header menu">
         {toggle("menuShowNewIn", "Show New In", "Products marked New, first item in the menu")}
-        {toggle("menuShowLawn", "Show Lawn", "All products with fabric Lawn")}
+        {toggle("menuShowBestSellers", "Show Best Sellers", "Products marked Best Seller")}
         {toggle("menuShowSale", "Show Sale", "All products with a sale price")}
       </Section>
 

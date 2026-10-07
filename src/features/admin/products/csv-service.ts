@@ -1,6 +1,5 @@
 import "server-only";
 import Papa from "papaparse";
-import type { ProductType } from "@prisma/client";
 import { db } from "@/lib/db";
 import { slugify } from "@/lib/slug";
 import {
@@ -11,6 +10,7 @@ import {
   type ParsedCsvRow,
 } from "@/features/admin/products/csv-format";
 import { variantSku } from "@/features/admin/products/schema";
+import { jeansSizeLabel, jeansSizeSortOrder } from "@/features/admin/attributes/schema";
 
 export interface CsvImportSummary {
   productsCreated: number;
@@ -145,9 +145,22 @@ export async function importProductsCsv(csvText: string): Promise<CsvImportSumma
       // Create any sizes and colours that don't exist yet.
       for (const { data } of rows) {
         if (!sizeByLabel.has(data.size.toLowerCase())) {
+          // "W32 L30" becomes a waist/length size; anything else (e.g. "7-8Y") a plain size.
+          const jeans = data.size.match(/^W\s*(\d+)\s*L\s*(\d+)$/i);
+          const waist = jeans ? Number(jeans[1]) : null;
+          const length = jeans ? Number(jeans[2]) : null;
           const size = await db.size.create({
-            data: { label: data.size, sortOrder: nextSizeOrder++ },
+            data:
+              waist !== null && length !== null
+                ? {
+                    label: jeansSizeLabel(waist, length),
+                    waist,
+                    length,
+                    sortOrder: jeansSizeSortOrder(waist, length),
+                  }
+                : { label: data.size, sortOrder: nextSizeOrder++ },
           });
+          sizeByLabel.set(data.size.toLowerCase(), size);
           sizeByLabel.set(size.label.toLowerCase(), size);
           summary.sizesCreated.push(size.label);
         }
@@ -165,8 +178,9 @@ export async function importProductsCsv(csvText: string): Promise<CsvImportSumma
         ...(first.slug !== undefined && { slug: slugify(first.slug) }),
         ...(categoryId && { categoryId }),
         ...(first.fabric !== undefined && { fabric: first.fabric }),
-        ...(first.pieces !== undefined && { pieces: first.pieces }),
-        ...(first.type !== undefined && { type: first.type as ProductType }),
+        ...(first.fit !== undefined && { fit: first.fit }),
+        ...(first.rise !== undefined && { rise: first.rise }),
+        ...(first.stretch !== undefined && { stretch: first.stretch }),
         ...(first.base_price !== undefined && { basePrice: first.base_price }),
         ...(first.sale_price !== undefined && { salePrice: first.sale_price }),
         ...(first.description !== undefined && { description: first.description }),

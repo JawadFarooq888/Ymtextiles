@@ -8,9 +8,9 @@ export const getSizeChartsForGuide = unstable_cache(
   async () =>
     db.sizeChart.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, rows: true, notes: true },
+      select: { id: true, name: true, columns: true, rows: true, notes: true },
     }),
-  ["size-charts-guide"],
+  ["size-charts-guide", "v2"],
   { tags: [TAGS.catalog] },
 );
 

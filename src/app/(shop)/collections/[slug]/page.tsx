@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title: collection.title,
     description:
       collection.description ??
-      `Shop ${collection.title} at YM Textiles. Pakistani clothing, stocked in the UK.`,
+      `Shop ${collection.title} at YM Textiles. Jeans for men, women and kids, stocked in the UK.`,
     alternates: { canonical: `/collections/${slug}` },
   };
 }
@@ -49,7 +49,7 @@ export default async function CollectionPage({
   const filters = parseFilters(sp);
   const scope = index.products.filter(collection.match);
   const facets = facetOptions(scope, index);
-  const { products, total, page, pageCount } = applyFilters(scope, filters);
+  const { products, total, page, pageCount } = applyFilters(scope, filters, index);
   const basePath = `/collections/${slug}`;
   const crumbs = [
     { name: "Home", href: "/" },

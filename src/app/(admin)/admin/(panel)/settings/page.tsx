@@ -41,7 +41,7 @@ export default async function SettingsPage() {
           seoTitle: s?.seoTitle ?? "",
           seoDescription: s?.seoDescription ?? "",
           menuShowNewIn: s?.menuShowNewIn ?? true,
-          menuShowLawn: s?.menuShowLawn ?? true,
+          menuShowBestSellers: s?.menuShowBestSellers ?? true,
           menuShowSale: s?.menuShowSale ?? true,
           whyUs: parseWhyUs(s?.whyUs),
         }}

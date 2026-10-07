@@ -18,18 +18,25 @@ export const SYSTEM_PAGES: DefaultPage[] = [
   {
     slug: "size-guide",
     title: "Size Guide",
-    metaDescription: "Measurements for our stitched clothing in inches and centimetres.",
+    metaDescription:
+      "How to find your jeans size: waist, length and fit, in inches and centimetres.",
     sortOrder: 1,
-    body: `All measurements are of the garment itself. If you are between sizes or unsure, message us on WhatsApp and we will help you choose.
+    body: `Our jeans are sized by **waist** and **length** in inches, for example **W32 L30**. If you are between sizes or unsure, message us on WhatsApp and we will help you choose.
 
 ## How to measure
 
-- **Chest:** around the fullest part of the chest, under the arms.
-- **Length:** from the highest point of the shoulder down to the hem.
-- **Sleeve:** from the shoulder seam to the end of the sleeve.
-- **Shalwar / trouser:** from the waist down to the hem.
+- **Waist:** measure around your natural waist, where you usually wear your jeans. Keep the tape snug but not tight.
+- **Length (inside leg):** measure from the top of your inner thigh down to where you want the hem, ideally with shoes off.
+- **Hip:** around the fullest part of your hips.
+- **Easiest way:** lay a pair of jeans that fits you well flat, and measure across the waistband (double it) and along the inside leg seam.
 
-Unstitched suits come as fabric for you to have tailored to your own measurements.`,
+## Fits
+
+- **Skinny / Slim:** close fit through the hip and leg.
+- **Straight / Regular:** the same width from knee to hem.
+- **Relaxed / Wide leg / Baggy:** more room through the leg.
+
+Kids jeans are sized by age. Check the chart for each age group.`,
   },
   {
     slug: "delivery-returns",
@@ -49,20 +56,20 @@ Faulty or incorrect items: your statutory rights under the Consumer Rights Act 2
   {
     slug: "about",
     title: "About YM Textiles",
-    metaDescription: "Pakistani clothing, sourced in Pakistan and stocked in the UK.",
+    metaDescription: "Jeans for men, women and kids, stocked in the UK.",
     sortOrder: 3,
-    body: `YM Textiles brings Pakistani clothing to customers across the United Kingdom: lawn suits, ready to wear, unstitched fabric, formal and wedding wear, and menswear.
+    body: `YM Textiles sells jeans for men, women and kids across the United Kingdom, in every fit from skinny to wide leg.
 
-Our story, who we are and how we choose our collections: ${REVIEW}`,
+Our story, who we are and how we choose our denim: **[TO BE REVIEWED BY OWNER]**`,
   },
   {
     slug: "contact",
     title: "Contact Us",
     metaDescription: "Get in touch with YM Textiles on WhatsApp or by email.",
     sortOrder: 4,
-    body: `The quickest way to reach us is WhatsApp. We can help with sizing, fabric, orders and delivery.
+    body: `The quickest way to reach us is WhatsApp. We can help with sizing, fit, washes, orders and delivery.
 
-Opening hours for replies: ${REVIEW}`,
+Opening hours for replies: **[TO BE REVIEWED BY OWNER]**`,
   },
   {
     slug: "privacy-policy",
@@ -130,8 +137,11 @@ Only used if you accept them in the cookie banner. They help us understand which
 export const SYSTEM_PAGE_SLUGS = new Set(SYSTEM_PAGES.map((p) => p.slug));
 
 export const DEFAULT_WHY_US = [
-  { title: "Sourced in Pakistan", text: "Chosen directly from Pakistani makers and brands." },
+  { title: "Every fit", text: "Skinny, slim, straight, relaxed and wide leg." },
   { title: "Stocked in the UK", text: "Already here, so it reaches you quickly." },
-  { title: "Real measurements", text: "Size charts in inches and centimetres for every style." },
-  { title: "Help on WhatsApp", text: "Ask about fit, fabric or delivery and get a real reply." },
+  {
+    title: "Waist and length",
+    text: "Choose your exact W and L size, with a size chart for every style.",
+  },
+  { title: "Help on WhatsApp", text: "Ask about fit, size or delivery and get a real reply." },
 ];

@@ -45,7 +45,7 @@ export const settingsSchema = z.object({
   seoTitle: z.string().trim().min(1, "Required").max(70, "Keep it under 70 characters"),
   seoDescription: z.string().trim().min(1, "Required").max(160, "Keep it under 160 characters"),
   menuShowNewIn: z.boolean(),
-  menuShowLawn: z.boolean(),
+  menuShowBestSellers: z.boolean(),
   menuShowSale: z.boolean(),
   whyUs: z
     .array(

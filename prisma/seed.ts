@@ -1,339 +1,353 @@
 /**
- * Seed data for development and first deployment.
+ * Seed data for development and first deployment (jeans shop).
  *
  * EVERYTHING HERE IS SAMPLE DATA. Product names, prices, stock, size-chart
  * measurements, delivery fees and the WhatsApp number are placeholders that
  * the owner must replace from the admin panel. The script is idempotent and
- * safe to run repeatedly: it upserts by unique keys and never deletes.
+ * safe to run repeatedly: it creates what is missing and never overwrites or
+ * deletes the owner's data.
  */
-import { PrismaClient, ProductType, BannerPlacement, Role } from "@prisma/client";
+import { BannerPlacement, PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { SYSTEM_PAGES } from "../src/features/content/defaults";
+import { DEFAULT_JEANS_COLUMNS } from "../src/features/size-charts/chart";
 
 const db = new PrismaClient();
 
-const SIZES = [
-  { label: "XS", code: "XS", sortOrder: 1 },
-  { label: "S", code: "S", sortOrder: 2 },
-  { label: "M", code: "M", sortOrder: 3 },
-  { label: "L", code: "L", sortOrder: 4 },
-  { label: "XL", code: "XL", sortOrder: 5 },
-  { label: "XXL", code: "XXL", sortOrder: 6 },
-  { label: "Unstitched", code: "UNS", sortOrder: 7 },
+// ---------- Sizes (inches) ----------
+const MEN_WAISTS = [28, 30, 32, 34, 36, 38];
+const MEN_LENGTHS = [30, 32, 34];
+const WOMEN_WAISTS = [24, 26, 28, 30, 32];
+const WOMEN_LENGTHS = [28, 30, 32];
+const KIDS_SIZES = ["3-4Y", "5-6Y", "7-8Y", "9-10Y", "11-12Y", "13-14Y"];
+
+const jeansLabel = (w: number, l: number) => `W${w} L${l}`;
+const grid = (waists: number[], lengths: number[]) =>
+  waists.flatMap((w) => lengths.map((l) => ({ waist: w, length: l, label: jeansLabel(w, l) })));
+
+const WASHES = [
+  { name: "Light Blue", hex: "#A7C4E0", code: "LBL" },
+  { name: "Mid Blue", hex: "#5B84B1", code: "MBL" },
+  { name: "Dark Indigo", hex: "#23395B", code: "IND" },
+  { name: "Black", hex: "#1C1C1C", code: "BLK" },
+  { name: "Grey", hex: "#8A8D91", code: "GRY" },
+  { name: "Ecru", hex: "#EDE6D6", code: "ECR" },
 ] as const;
+type Wash = (typeof WASHES)[number]["name"];
 
-const COLOURS = [
-  { name: "Green", hex: "#2F6B4F", code: "GRN" },
-  { name: "Maroon", hex: "#7A1F2B", code: "MRN" },
-  { name: "Navy", hex: "#1F2F55", code: "NVY" },
-  { name: "Ivory", hex: "#F4EDDD", code: "IVR" },
-  { name: "Black", hex: "#1A1A1A", code: "BLK" },
-  { name: "Pink", hex: "#D98BA0", code: "PNK" },
-] as const;
-
-type ColourName = (typeof COLOURS)[number]["name"];
-type SizeLabel = (typeof SIZES)[number]["label"];
-
+// ---------- Categories (parents before children) ----------
 const CATEGORIES = [
-  { slug: "ready-to-wear", name: "Ready to Wear", sortOrder: 1 },
-  { slug: "ready-to-wear-2-piece", name: "2 Piece", sortOrder: 1, parent: "ready-to-wear" },
-  { slug: "ready-to-wear-3-piece", name: "3 Piece", sortOrder: 2, parent: "ready-to-wear" },
-  { slug: "unstitched", name: "Unstitched", sortOrder: 2 },
-  { slug: "formal-wedding", name: "Formal & Wedding", sortOrder: 3 },
-  { slug: "men", name: "Men", sortOrder: 4 },
+  { slug: "men", name: "Men", sortOrder: 1 },
+  { slug: "men-skinny", name: "Skinny", sortOrder: 1, parent: "men" },
+  { slug: "men-slim", name: "Slim", sortOrder: 2, parent: "men" },
+  { slug: "men-straight", name: "Straight", sortOrder: 3, parent: "men" },
+  { slug: "men-relaxed", name: "Relaxed & Bootcut", sortOrder: 4, parent: "men" },
+  { slug: "women", name: "Women", sortOrder: 2 },
+  { slug: "women-skinny", name: "Skinny", sortOrder: 1, parent: "women" },
+  { slug: "women-straight", name: "Straight", sortOrder: 2, parent: "women" },
+  { slug: "women-wide-leg", name: "Wide Leg", sortOrder: 3, parent: "women" },
+  { slug: "women-mom", name: "Mom & Boyfriend", sortOrder: 4, parent: "women" },
+  { slug: "kids", name: "Kids", sortOrder: 3 },
+  { slug: "kids-boys", name: "Boys", sortOrder: 1, parent: "kids" },
+  { slug: "kids-girls", name: "Girls", sortOrder: 2, parent: "kids" },
+  { slug: "unisex", name: "Unisex", sortOrder: 4 },
 ] as const;
-
 type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 
-const STITCHED_SIZES: SizeLabel[] = ["XS", "S", "M", "L", "XL", "XXL"];
-const MEN_SIZES: SizeLabel[] = ["S", "M", "L", "XL", "XXL"];
+// ---------- Sample size charts (inches) ----------
+const MEN_CHART = MEN_WAISTS.map((w) => ({
+  size: `W${w}`,
+  values: [w, w + 7, null, 10.5 + (w - 28) * 0.125, 7 + (w - 28) * 0.125],
+}));
+const WOMEN_CHART = WOMEN_WAISTS.map((w) => ({
+  size: `W${w}`,
+  values: [w, w + 10, null, 10 + (w - 24) * 0.125, 6 + (w - 24) * 0.125],
+}));
+const KIDS_COLUMNS = ["Waist", "Hip", "Inside leg", "Height"];
+const KIDS_CHART = KIDS_SIZES.map((size, i) => ({
+  size,
+  values: [20 + i, 22 + i * 1.5, 15 + i * 2.5, 39 + i * 5],
+}));
 
+// ---------- Sample products ----------
 interface SampleProduct {
   name: string;
   slug: string;
   sku: string;
   category: CategorySlug;
+  fit: string;
+  rise: "Low" | "Mid" | "High";
+  stretch: "No stretch" | "Comfort stretch" | "Super stretch";
   fabric: string;
-  pieces: number;
-  type: ProductType;
   basePrice: number; // pence
-  salePrice?: number; // pence
-  sizes: SizeLabel[];
-  colours: ColourName[];
+  salePrice?: number;
+  sizing: "men" | "women" | "kids";
+  washes: Wash[];
   tags: string[];
   isNew?: boolean;
   isBestSeller?: boolean;
   isFeatured?: boolean;
-  sizeChart?: "women" | "men";
 }
+
+const COTTON_STRETCH = "98% cotton, 2% elastane";
+const RIGID = "100% cotton";
 
 const PRODUCTS: SampleProduct[] = [
   {
-    name: "Sample Embroidered Lawn 3 Piece",
-    slug: "sample-embroidered-lawn-3-piece",
-    sku: "YM-SMP-001",
-    category: "ready-to-wear-3-piece",
-    fabric: "Lawn",
-    pieces: 3,
-    type: ProductType.STITCHED,
-    basePrice: 4500,
-    sizes: STITCHED_SIZES,
-    colours: ["Green", "Pink", "Ivory"],
-    tags: ["lawn", "embroidered", "summer"],
+    name: "Sample Men's Slim Jeans",
+    slug: "sample-mens-slim-jeans",
+    sku: "YMJ-SMP-001",
+    category: "men-slim",
+    fit: "Slim",
+    rise: "Mid",
+    stretch: "Comfort stretch",
+    fabric: COTTON_STRETCH,
+    basePrice: 3999,
+    sizing: "men",
+    washes: ["Dark Indigo", "Black", "Mid Blue"],
+    tags: ["men", "slim"],
     isNew: true,
+    isBestSeller: true,
     isFeatured: true,
-    sizeChart: "women",
   },
   {
-    name: "Sample Printed Lawn 2 Piece",
-    slug: "sample-printed-lawn-2-piece",
-    sku: "YM-SMP-002",
-    category: "ready-to-wear-2-piece",
-    fabric: "Lawn",
-    pieces: 2,
-    type: ProductType.STITCHED,
-    basePrice: 3500,
-    salePrice: 2800,
-    sizes: STITCHED_SIZES,
-    colours: ["Navy", "Pink"],
-    tags: ["lawn", "printed", "summer"],
+    name: "Sample Men's Straight Jeans",
+    slug: "sample-mens-straight-jeans",
+    sku: "YMJ-SMP-002",
+    category: "men-straight",
+    fit: "Straight",
+    rise: "Mid",
+    stretch: "No stretch",
+    fabric: RIGID,
+    basePrice: 3499,
+    salePrice: 2999,
+    sizing: "men",
+    washes: ["Mid Blue", "Light Blue", "Black"],
+    tags: ["men", "straight", "classic"],
     isBestSeller: true,
-    sizeChart: "women",
   },
   {
-    name: "Sample Cambric Kurta 1 Piece",
-    slug: "sample-cambric-kurta-1-piece",
-    sku: "YM-SMP-003",
-    category: "ready-to-wear",
-    fabric: "Cambric",
-    pieces: 1,
-    type: ProductType.STITCHED,
-    basePrice: 2500,
-    sizes: STITCHED_SIZES,
-    colours: ["Black", "Maroon"],
-    tags: ["cambric", "kurta"],
+    name: "Sample Men's Skinny Jeans",
+    slug: "sample-mens-skinny-jeans",
+    sku: "YMJ-SMP-003",
+    category: "men-skinny",
+    fit: "Skinny",
+    rise: "Mid",
+    stretch: "Super stretch",
+    fabric: "92% cotton, 6% polyester, 2% elastane",
+    basePrice: 3299,
+    sizing: "men",
+    washes: ["Black", "Dark Indigo"],
+    tags: ["men", "skinny"],
     isNew: true,
-    sizeChart: "women",
   },
   {
-    name: "Sample Khaddar 3 Piece",
-    slug: "sample-khaddar-3-piece",
-    sku: "YM-SMP-004",
-    category: "ready-to-wear-3-piece",
-    fabric: "Khaddar",
-    pieces: 3,
-    type: ProductType.STITCHED,
-    basePrice: 5500,
-    salePrice: 4400,
-    sizes: STITCHED_SIZES,
-    colours: ["Maroon", "Navy"],
-    tags: ["khaddar", "winter"],
-    isBestSeller: true,
-    sizeChart: "women",
+    name: "Sample Men's Relaxed Jeans",
+    slug: "sample-mens-relaxed-jeans",
+    sku: "YMJ-SMP-004",
+    category: "men-relaxed",
+    fit: "Relaxed",
+    rise: "Mid",
+    stretch: "No stretch",
+    fabric: RIGID,
+    basePrice: 4499,
+    sizing: "men",
+    washes: ["Light Blue", "Dark Indigo"],
+    tags: ["men", "relaxed"],
   },
   {
-    name: "Sample Unstitched Lawn 3 Piece",
-    slug: "sample-unstitched-lawn-3-piece",
-    sku: "YM-SMP-005",
-    category: "unstitched",
-    fabric: "Lawn",
-    pieces: 3,
-    type: ProductType.UNSTITCHED,
-    basePrice: 3900,
-    sizes: ["Unstitched"],
-    colours: ["Green", "Ivory", "Pink"],
-    tags: ["lawn", "unstitched", "summer"],
+    name: "Sample Men's Bootcut Jeans",
+    slug: "sample-mens-bootcut-jeans",
+    sku: "YMJ-SMP-005",
+    category: "men-relaxed",
+    fit: "Bootcut",
+    rise: "Mid",
+    stretch: "Comfort stretch",
+    fabric: COTTON_STRETCH,
+    basePrice: 3799,
+    salePrice: 3199,
+    sizing: "men",
+    washes: ["Dark Indigo", "Mid Blue"],
+    tags: ["men", "bootcut"],
+  },
+  {
+    name: "Sample Women's High Rise Skinny Jeans",
+    slug: "sample-womens-high-rise-skinny-jeans",
+    sku: "YMJ-SMP-006",
+    category: "women-skinny",
+    fit: "Skinny",
+    rise: "High",
+    stretch: "Super stretch",
+    fabric: "90% cotton, 8% polyester, 2% elastane",
+    basePrice: 3499,
+    sizing: "women",
+    washes: ["Black", "Mid Blue", "Light Blue"],
+    tags: ["women", "skinny", "high rise"],
     isNew: true,
     isBestSeller: true,
-  },
-  {
-    name: "Sample Unstitched Chiffon 3 Piece",
-    slug: "sample-unstitched-chiffon-3-piece",
-    sku: "YM-SMP-006",
-    category: "unstitched",
-    fabric: "Chiffon",
-    pieces: 3,
-    type: ProductType.UNSTITCHED,
-    basePrice: 6500,
-    sizes: ["Unstitched"],
-    colours: ["Black", "Maroon"],
-    tags: ["chiffon", "unstitched", "festive"],
-  },
-  {
-    name: "Sample Unstitched Cambric 2 Piece",
-    slug: "sample-unstitched-cambric-2-piece",
-    sku: "YM-SMP-007",
-    category: "unstitched",
-    fabric: "Cambric",
-    pieces: 2,
-    type: ProductType.UNSTITCHED,
-    basePrice: 2900,
-    salePrice: 2300,
-    sizes: ["Unstitched"],
-    colours: ["Navy", "Green"],
-    tags: ["cambric", "unstitched"],
-  },
-  {
-    name: "Sample Organza Formal 3 Piece",
-    slug: "sample-organza-formal-3-piece",
-    sku: "YM-SMP-008",
-    category: "formal-wedding",
-    fabric: "Organza",
-    pieces: 3,
-    type: ProductType.STITCHED,
-    basePrice: 12000,
-    sizes: STITCHED_SIZES,
-    colours: ["Ivory", "Pink"],
-    tags: ["organza", "formal", "wedding"],
     isFeatured: true,
-    isNew: true,
-    sizeChart: "women",
   },
   {
-    name: "Sample Embroidered Chiffon Wedding Suit",
-    slug: "sample-embroidered-chiffon-wedding-suit",
-    sku: "YM-SMP-009",
-    category: "formal-wedding",
-    fabric: "Chiffon",
-    pieces: 3,
-    type: ProductType.STITCHED,
-    basePrice: 18000,
-    salePrice: 15000,
-    sizes: STITCHED_SIZES,
-    colours: ["Maroon", "Green"],
-    tags: ["chiffon", "wedding", "embroidered"],
+    name: "Sample Women's Straight Leg Jeans",
+    slug: "sample-womens-straight-leg-jeans",
+    sku: "YMJ-SMP-007",
+    category: "women-straight",
+    fit: "Straight",
+    rise: "High",
+    stretch: "Comfort stretch",
+    fabric: COTTON_STRETCH,
+    basePrice: 3999,
+    salePrice: 3299,
+    sizing: "women",
+    washes: ["Light Blue", "Mid Blue"],
+    tags: ["women", "straight"],
     isBestSeller: true,
-    sizeChart: "women",
   },
   {
-    name: "Sample Unstitched Formal Organza 3 Piece",
-    slug: "sample-unstitched-formal-organza-3-piece",
-    sku: "YM-SMP-010",
-    category: "formal-wedding",
-    fabric: "Organza",
-    pieces: 3,
-    type: ProductType.UNSTITCHED,
-    basePrice: 9500,
-    sizes: ["Unstitched"],
-    colours: ["Ivory", "Black"],
-    tags: ["organza", "formal", "unstitched"],
-  },
-  {
-    name: "Sample Men's Cotton Kameez Shalwar",
-    slug: "sample-mens-cotton-kameez-shalwar",
-    sku: "YM-SMP-011",
-    category: "men",
-    fabric: "Cotton",
-    pieces: 2,
-    type: ProductType.STITCHED,
-    basePrice: 4000,
-    sizes: MEN_SIZES,
-    colours: ["Ivory", "Black", "Navy"],
-    tags: ["men", "cotton", "kameez shalwar"],
-    isBestSeller: true,
+    name: "Sample Women's Wide Leg Jeans",
+    slug: "sample-womens-wide-leg-jeans",
+    sku: "YMJ-SMP-008",
+    category: "women-wide-leg",
+    fit: "Wide leg",
+    rise: "High",
+    stretch: "No stretch",
+    fabric: RIGID,
+    basePrice: 4499,
+    sizing: "women",
+    washes: ["Light Blue", "Dark Indigo"],
+    tags: ["women", "wide leg"],
     isNew: true,
-    sizeChart: "men",
   },
   {
-    name: "Sample Men's Wash & Wear Unstitched",
-    slug: "sample-mens-wash-and-wear-unstitched",
-    sku: "YM-SMP-012",
-    category: "men",
-    fabric: "Wash & Wear",
-    pieces: 2,
-    type: ProductType.UNSTITCHED,
-    basePrice: 3200,
-    sizes: ["Unstitched"],
-    colours: ["Navy", "Black"],
-    tags: ["men", "wash and wear", "unstitched"],
+    name: "Sample Women's Mom Jeans",
+    slug: "sample-womens-mom-jeans",
+    sku: "YMJ-SMP-009",
+    category: "women-mom",
+    fit: "Mom",
+    rise: "High",
+    stretch: "No stretch",
+    fabric: RIGID,
+    basePrice: 3699,
+    sizing: "women",
+    washes: ["Light Blue", "Mid Blue"],
+    tags: ["women", "mom", "vintage"],
+  },
+  {
+    name: "Sample Boys' Slim Jeans",
+    slug: "sample-boys-slim-jeans",
+    sku: "YMJ-SMP-010",
+    category: "kids-boys",
+    fit: "Slim",
+    rise: "Mid",
+    stretch: "Comfort stretch",
+    fabric: COTTON_STRETCH,
+    basePrice: 1999,
+    sizing: "kids",
+    washes: ["Mid Blue", "Black"],
+    tags: ["kids", "boys"],
+    isNew: true,
+  },
+  {
+    name: "Sample Girls' Skinny Jeans",
+    slug: "sample-girls-skinny-jeans",
+    sku: "YMJ-SMP-011",
+    category: "kids-girls",
+    fit: "Skinny",
+    rise: "Mid",
+    stretch: "Super stretch",
+    fabric: "75% cotton, 23% polyester, 2% elastane",
+    basePrice: 1899,
+    salePrice: 1599,
+    sizing: "kids",
+    washes: ["Light Blue", "Black"],
+    tags: ["kids", "girls"],
+    isBestSeller: true,
+  },
+  {
+    name: "Sample Unisex Baggy Jeans",
+    slug: "sample-unisex-baggy-jeans",
+    sku: "YMJ-SMP-012",
+    category: "unisex",
+    fit: "Baggy",
+    rise: "Mid",
+    stretch: "No stretch",
+    fabric: RIGID,
+    basePrice: 4299,
+    sizing: "men",
+    washes: ["Light Blue", "Black"],
+    tags: ["unisex", "baggy"],
+    isFeatured: true,
   },
 ];
 
-// Sample measurements in inches. Replace with real measurements.
-const WOMEN_CHART_ROWS = [
-  { size: "XS", chest: 34, length: 40, sleeve: 20, trouserLength: 37 },
-  { size: "S", chest: 36, length: 41, sleeve: 21, trouserLength: 38 },
-  { size: "M", chest: 38, length: 42, sleeve: 21.5, trouserLength: 38.5 },
-  { size: "L", chest: 41, length: 43, sleeve: 22, trouserLength: 39 },
-  { size: "XL", chest: 44, length: 44, sleeve: 22.5, trouserLength: 39.5 },
-  { size: "XXL", chest: 47, length: 45, sleeve: 23, trouserLength: 40 },
-];
-const MEN_CHART_ROWS = [
-  { size: "S", chest: 40, length: 40, sleeve: 23, trouserLength: 40 },
-  { size: "M", chest: 42, length: 41, sleeve: 23.5, trouserLength: 41 },
-  { size: "L", chest: 44, length: 42, sleeve: 24, trouserLength: 42 },
-  { size: "XL", chest: 46, length: 43, sleeve: 24.5, trouserLength: 42.5 },
-  { size: "XXL", chest: 48, length: 44, sleeve: 25, trouserLength: 43 },
-];
-
-// Deterministic sample stock so the shop shows a mix of in-stock, low-stock and sold-out variants.
+// Deterministic sample stock so the shop shows in-stock, low-stock and sold-out variants.
 function sampleStock(productIndex: number, variantIndex: number): number {
   const n = (productIndex * 7 + variantIndex * 3) % 11;
   if (n === 0) return 0;
-  if (n <= 2) return n + 1; // 2-3 left
+  if (n <= 2) return n + 1;
   return n + 4;
 }
 
 async function main() {
-  // Sizes and colours
-  const sizeIds = new Map<string, string>();
-  for (const s of SIZES) {
-    const row = await db.size.upsert({
-      where: { label: s.label },
-      update: { sortOrder: s.sortOrder },
-      create: { label: s.label, sortOrder: s.sortOrder },
-    });
-    sizeIds.set(s.label, row.id);
-  }
-  const colourIds = new Map<string, string>();
-  for (const c of COLOURS) {
-    const row = await db.colour.upsert({
-      where: { name: c.name },
-      update: {},
-      create: { name: c.name, hex: c.hex },
-    });
-    colourIds.set(c.name, row.id);
-  }
+  // Sizes
+  const jeansSizes = [...grid(MEN_WAISTS, MEN_LENGTHS), ...grid(WOMEN_WAISTS, WOMEN_LENGTHS)];
+  await db.size.createMany({
+    data: [
+      ...jeansSizes.map((s) => ({ ...s, sortOrder: s.waist * 100 + s.length })),
+      ...KIDS_SIZES.map((label, i) => ({ label, sortOrder: i + 1 })),
+    ],
+    skipDuplicates: true,
+  });
+  const sizes = await db.size.findMany();
+  const sizeId = new Map(sizes.map((s) => [s.label, s.id]));
 
-  // Categories (parents are listed before children)
-  const categoryIds = new Map<string, string>();
+  // Washes
+  await db.colour.createMany({
+    data: WASHES.map(({ name, hex }) => ({ name, hex })),
+    skipDuplicates: true,
+  });
+  const colourId = new Map((await db.colour.findMany()).map((c) => [c.name, c.id]));
+
+  // Categories
+  const categoryId = new Map<string, string>();
   for (const c of CATEGORIES) {
-    const parentId = "parent" in c ? categoryIds.get(c.parent) : undefined;
+    const parentId = "parent" in c ? categoryId.get(c.parent) : undefined;
     const row = await db.category.upsert({
       where: { slug: c.slug },
       update: {},
       create: { slug: c.slug, name: c.name, sortOrder: c.sortOrder, parentId },
     });
-    categoryIds.set(c.slug, row.id);
+    categoryId.set(c.slug, row.id);
   }
 
   // Size charts
-  const womenChart = await db.sizeChart.upsert({
-    where: { name: "Sample Women's Size Chart" },
-    update: {},
-    create: {
-      name: "Sample Women's Size Chart",
-      rows: WOMEN_CHART_ROWS,
-      notes: "SAMPLE MEASUREMENTS. Replace with real measurements.",
+  const charts = {
+    men: { name: "Sample Men's Jeans Size Chart", columns: DEFAULT_JEANS_COLUMNS, rows: MEN_CHART },
+    women: {
+      name: "Sample Women's Jeans Size Chart",
+      columns: DEFAULT_JEANS_COLUMNS,
+      rows: WOMEN_CHART,
     },
-  });
-  const menChart = await db.sizeChart.upsert({
-    where: { name: "Sample Men's Size Chart" },
-    update: {},
-    create: {
-      name: "Sample Men's Size Chart",
-      rows: MEN_CHART_ROWS,
-      notes: "SAMPLE MEASUREMENTS. Replace with real measurements.",
-    },
-  });
+    kids: { name: "Sample Kids' Jeans Size Chart", columns: KIDS_COLUMNS, rows: KIDS_CHART },
+  };
+  const chartId: Record<string, string> = {};
+  for (const [key, c] of Object.entries(charts)) {
+    const row = await db.sizeChart.upsert({
+      where: { name: c.name },
+      update: {},
+      create: {
+        name: c.name,
+        columns: c.columns,
+        rows: c.rows,
+        notes:
+          "SAMPLE MEASUREMENTS. Replace with real measurements. Inside leg equals the L in the size (e.g. L30 = 30 inches).",
+      },
+    });
+    chartId[key] = row.id;
+  }
 
   // Products and variants
   for (const [pIndex, p] of PRODUCTS.entries()) {
-    const categoryId = categoryIds.get(p.category);
-    if (!categoryId) throw new Error(`Unknown category ${p.category}`);
-    const sizeChartId =
-      p.sizeChart === "women" ? womenChart.id : p.sizeChart === "men" ? menChart.id : null;
-
     const product = await db.product.upsert({
       where: { slug: p.slug },
       update: {},
@@ -343,14 +357,15 @@ async function main() {
         sku: p.sku,
         description:
           "This is a sample product created by the seed script. Replace the name, description, photos, price and stock from the admin panel.",
-        careDetails: "Sample care details: gentle hand wash in cold water. Do not bleach.",
+        careDetails: "Sample care details: machine wash cold, inside out. Do not tumble dry.",
         fabric: p.fabric,
-        pieces: p.pieces,
-        type: p.type,
+        fit: p.fit,
+        rise: p.rise,
+        stretch: p.stretch,
         basePrice: p.basePrice,
         salePrice: p.salePrice ?? null,
-        categoryId,
-        sizeChartId,
+        categoryId: categoryId.get(p.category)!,
+        sizeChartId: chartId[p.sizing],
         tags: p.tags,
         isNew: p.isNew ?? false,
         isBestSeller: p.isBestSeller ?? false,
@@ -358,26 +373,26 @@ async function main() {
       },
     });
 
+    const labels =
+      p.sizing === "kids"
+        ? KIDS_SIZES
+        : p.sizing === "women"
+          ? grid(WOMEN_WAISTS, WOMEN_LENGTHS).map((s) => s.label)
+          : grid(MEN_WAISTS, MEN_LENGTHS).map((s) => s.label);
     let vIndex = 0;
-    for (const sizeLabel of p.sizes) {
-      for (const colourName of p.colours) {
-        const sizeCode = SIZES.find((s) => s.label === sizeLabel)!.code;
-        const colourCode = COLOURS.find((c) => c.name === colourName)!.code;
-        const sku = `${p.sku}-${sizeCode}-${colourCode}`;
-        await db.variant.upsert({
-          where: { sku },
-          update: {},
-          create: {
-            productId: product.id,
-            sizeId: sizeIds.get(sizeLabel)!,
-            colourId: colourIds.get(colourName)!,
-            sku,
-            stock: sampleStock(pIndex, vIndex),
-          },
-        });
-        vIndex++;
-      }
-    }
+    const variants = labels.flatMap((label) =>
+      p.washes.map((wash) => {
+        const code = WASHES.find((w) => w.name === wash)!.code;
+        return {
+          productId: product.id,
+          sizeId: sizeId.get(label)!,
+          colourId: colourId.get(wash)!,
+          sku: `${p.sku}-${label.replace(/\s+/g, "")}-${code}`.toUpperCase(),
+          stock: sampleStock(pIndex, vIndex++),
+        };
+      }),
+    );
+    await db.variant.createMany({ data: variants, skipDuplicates: true });
   }
 
   // Settings (single row). PLACEHOLDER values: replace in Admin > Settings.
@@ -397,12 +412,11 @@ async function main() {
   });
 
   // Banners
-  const bannerCount = await db.banner.count();
-  if (bannerCount === 0) {
+  if ((await db.banner.count()) === 0) {
     await db.banner.createMany({
       data: [
         {
-          title: "Sample hero banner",
+          title: "Find your perfect fit",
           subtitle: "Replace this banner and image in Admin > Banners",
           ctaText: "Shop New In",
           ctaUrl: "/collections/new-in",
@@ -440,12 +454,13 @@ async function main() {
     if (adminPassword.length < 10) {
       throw new Error("SEED_ADMIN_PASSWORD must be at least 10 characters");
     }
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await db.user.upsert({
-      where: { email: adminEmail },
-      update: { role: Role.ADMIN },
-      create: { email: adminEmail, name: "Admin", passwordHash, role: Role.ADMIN },
-    });
+    const existing = await db.user.findUnique({ where: { email: adminEmail } });
+    if (!existing) {
+      const passwordHash = await bcrypt.hash(adminPassword, 12);
+      await db.user.create({
+        data: { email: adminEmail, name: "Admin", passwordHash, role: Role.ADMIN },
+      });
+    }
     console.log(`Admin user ready: ${adminEmail}`);
   } else {
     console.warn("SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD not set: skipped admin user.");

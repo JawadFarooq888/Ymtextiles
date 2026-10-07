@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
+  CLEARED_FILTERS,
   SORTS,
   activeFilterCount,
   filtersToQuery,
@@ -78,22 +79,7 @@ function FilterPanel({ filters, facets }: { filters: Filters; facets: FacetOptio
   return (
     <div className={cn("grid gap-6", pending && "opacity-60")} aria-busy={pending}>
       {count ? (
-        <Button
-          variant="ghost"
-          className="justify-self-start"
-          onClick={() =>
-            go({
-              sizes: [],
-              colours: [],
-              fabrics: [],
-              pieces: [],
-              type: null,
-              minPrice: null,
-              maxPrice: null,
-              inStock: false,
-            })
-          }
-        >
+        <Button variant="ghost" className="justify-self-start" onClick={() => go(CLEARED_FILTERS)}>
           <XIcon /> Clear all filters ({count})
         </Button>
       ) : null}
@@ -108,27 +94,30 @@ function FilterPanel({ filters, facets }: { filters: Filters; facets: FacetOptio
         In stock only
       </label>
 
-      {facets.sizes.length ? (
-        <FilterGroup title="Size">
-          {facets.sizes.map((s) => {
-            const on = filters.sizes.includes(s.id);
-            return (
-              <button
-                key={s.id}
-                type="button"
-                aria-pressed={on}
-                className={chip(on)}
-                onClick={() => go({ sizes: toggle(filters.sizes, s.id) })}
-              >
-                {s.label}
-              </button>
-            );
-          })}
-        </FilterGroup>
-      ) : null}
+      <ChipGroup
+        title="Waist (inches)"
+        options={facets.waists.map((w) => ({ value: w, label: `W${w}` }))}
+        selected={filters.waists}
+        onToggle={(v) => go({ waists: toggle(filters.waists, v) })}
+        chip={chip}
+      />
+      <ChipGroup
+        title="Length (inches)"
+        options={facets.lengths.map((l) => ({ value: l, label: `L${l}` }))}
+        selected={filters.lengths}
+        onToggle={(v) => go({ lengths: toggle(filters.lengths, v) })}
+        chip={chip}
+      />
+      <ChipGroup
+        title="Size"
+        options={facets.otherSizes.map((s) => ({ value: s.id, label: s.label }))}
+        selected={filters.sizes}
+        onToggle={(v) => go({ sizes: toggle(filters.sizes, v) })}
+        chip={chip}
+      />
 
       {facets.colours.length ? (
-        <FilterGroup title="Colour">
+        <FilterGroup title="Wash / colour">
           {facets.colours.map((c) => {
             const on = filters.colours.includes(c.id);
             return (
@@ -151,62 +140,30 @@ function FilterPanel({ filters, facets }: { filters: Filters; facets: FacetOptio
         </FilterGroup>
       ) : null}
 
-      {facets.fabrics.length > 1 ? (
-        <FilterGroup title="Fabric">
-          {facets.fabrics.map((f) => {
-            const on = filters.fabrics.includes(f);
-            return (
-              <button
-                key={f}
-                type="button"
-                aria-pressed={on}
-                className={chip(on)}
-                onClick={() => go({ fabrics: toggle(filters.fabrics, f) })}
-              >
-                {f}
-              </button>
-            );
-          })}
-        </FilterGroup>
-      ) : null}
-
-      {facets.pieces.length > 1 ? (
-        <FilterGroup title="Pieces">
-          {facets.pieces.map((n) => {
-            const on = filters.pieces.includes(n);
-            return (
-              <button
-                key={n}
-                type="button"
-                aria-pressed={on}
-                className={chip(on)}
-                onClick={() => go({ pieces: toggle(filters.pieces, n) })}
-              >
-                {n} piece
-              </button>
-            );
-          })}
-        </FilterGroup>
-      ) : null}
-
-      {facets.types.length > 1 ? (
-        <FilterGroup title="Stitched or unstitched">
-          {facets.types.map((t) => {
-            const on = filters.type === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                aria-pressed={on}
-                className={chip(on)}
-                onClick={() => go({ type: on ? null : t })}
-              >
-                {t === "STITCHED" ? "Stitched" : "Unstitched"}
-              </button>
-            );
-          })}
-        </FilterGroup>
-      ) : null}
+      <ChipGroup
+        title="Fit"
+        options={facets.fits.map((f) => ({ value: f, label: f }))}
+        selected={filters.fits}
+        onToggle={(v) => go({ fits: toggle(filters.fits, v) })}
+        chip={chip}
+        minOptions={2}
+      />
+      <ChipGroup
+        title="Rise"
+        options={facets.rises.map((r) => ({ value: r, label: `${r} rise` }))}
+        selected={filters.rises}
+        onToggle={(v) => go({ rises: toggle(filters.rises, v) })}
+        chip={chip}
+        minOptions={2}
+      />
+      <ChipGroup
+        title="Stretch"
+        options={facets.stretches.map((st) => ({ value: st, label: st }))}
+        selected={filters.stretches}
+        onToggle={(v) => go({ stretches: toggle(filters.stretches, v) })}
+        chip={chip}
+        minOptions={2}
+      />
 
       {facets.priceRange ? (
         <FilterGroup title="Price (£)">
@@ -249,6 +206,42 @@ function FilterPanel({ filters, facets }: { filters: Filters; facets: FacetOptio
         </FilterGroup>
       ) : null}
     </div>
+  );
+}
+
+function ChipGroup<T extends string | number>({
+  title,
+  options,
+  selected,
+  onToggle,
+  chip,
+  minOptions = 1,
+}: {
+  title: string;
+  options: { value: T; label: string }[];
+  selected: T[];
+  onToggle: (value: T) => void;
+  chip: (selected: boolean) => string;
+  minOptions?: number;
+}) {
+  if (options.length < minOptions) return null;
+  return (
+    <FilterGroup title={title}>
+      {options.map((o) => {
+        const on = selected.includes(o.value);
+        return (
+          <button
+            key={String(o.value)}
+            type="button"
+            aria-pressed={on}
+            className={chip(on)}
+            onClick={() => onToggle(o.value)}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </FilterGroup>
   );
 }
 

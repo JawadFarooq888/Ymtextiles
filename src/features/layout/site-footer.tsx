@@ -18,7 +18,6 @@ export async function SiteFooter() {
   const shopLinks = [
     settings.menuShowNewIn && { label: "New In", href: "/collections/new-in" },
     { label: "Best Sellers", href: "/collections/best-sellers" },
-    settings.menuShowLawn && { label: "Lawn", href: "/collections/lawn" },
     settings.menuShowSale && { label: "Sale", href: "/collections/sale" },
     { label: "All products", href: "/collections/all" },
   ].filter((l): l is { label: string; href: string } => !!l);

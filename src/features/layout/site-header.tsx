@@ -39,7 +39,7 @@ export async function SiteHeader() {
   ]);
   const menu = buildMenu(tree, {
     showNewIn: settings.menuShowNewIn,
-    showLawn: settings.menuShowLawn,
+    showBestSellers: settings.menuShowBestSellers,
     showSale: settings.menuShowSale,
   });
   const helpLinks = helpPageLinks(pages);

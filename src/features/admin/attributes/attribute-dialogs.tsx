@@ -24,6 +24,8 @@ import {
 } from "@/features/admin/attributes/actions";
 import {
   colourSchema,
+  jeansSizeLabel,
+  jeansSizeSortOrder,
   sizeSchema,
   type ColourFormValues,
   type SizeFormValues,
@@ -38,13 +40,23 @@ export function SizeDialog({
   initial?: SizeFormValues;
 }) {
   const [open, setOpen] = useState(false);
-  const empty: SizeFormValues = { label: "", sortOrder: "0" };
-  const { register, handleSubmit, formState, getValues, reset } = useForm<
+  const empty: SizeFormValues = { label: "", waist: "", length: "", sortOrder: "0" };
+  const { register, handleSubmit, formState, getValues, reset, setValue } = useForm<
     SizeFormValues,
     unknown,
     z.output<typeof sizeSchema>
   >({ resolver: zodResolver(sizeSchema), defaultValues: initial ?? empty });
   const errors = formState.errors;
+
+  // Suggest "W32 L30" and a sort order that keeps sizes in waist, then length, order.
+  function fillJeansLabel() {
+    const waist = Number(getValues("waist"));
+    const length = Number(getValues("length"));
+    if (Number.isInteger(waist) && Number.isInteger(length) && waist > 0 && length > 0) {
+      setValue("label", jeansSizeLabel(waist, length), { shouldDirty: true });
+      setValue("sortOrder", String(jeansSizeSortOrder(waist, length)), { shouldDirty: true });
+    }
+  }
 
   const onSubmit = handleSubmit(async () => {
     const result = await saveSizeAction(getValues());
@@ -68,11 +80,31 @@ export function SizeDialog({
           <DialogTitle>{initial?.id ? "Edit size" : "New size"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-4" noValidate>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Waist (inches)" htmlFor="size-waist" error={errors.waist?.message}>
+              <Input
+                id="size-waist"
+                inputMode="numeric"
+                placeholder="32"
+                {...register("waist", { onChange: fillJeansLabel })}
+                {...errorProps("size-waist", errors.waist?.message)}
+              />
+            </Field>
+            <Field label="Length (inches)" htmlFor="size-length" error={errors.length?.message}>
+              <Input
+                id="size-length"
+                inputMode="numeric"
+                placeholder="30"
+                {...register("length", { onChange: fillJeansLabel })}
+                {...errorProps("size-length", errors.length?.message)}
+              />
+            </Field>
+          </div>
           <Field
             label="Label"
             htmlFor="size-label"
             error={errors.label?.message}
-            hint="e.g. M, XL, Unstitched"
+            hint="Filled in from waist and length (e.g. W32 L30). For kids use an age like 7-8Y and leave waist/length empty."
           >
             <Input
               id="size-label"

@@ -13,11 +13,6 @@ export const VIRTUAL_COLLECTIONS: Record<string, VirtualCollection> = {
     description: "The latest arrivals, freshly stocked in the UK.",
     match: (p) => p.isNew,
   },
-  lawn: {
-    title: "Lawn",
-    description: "Light, breathable lawn suits for warmer days.",
-    match: (p) => p.fabric?.toLowerCase() === "lawn",
-  },
   sale: {
     title: "Sale",
     description: "Reduced prices while stock lasts.",
@@ -89,14 +84,14 @@ export interface MenuItem {
 
 export interface MenuOptions {
   showNewIn: boolean;
-  showLawn: boolean;
+  showBestSellers: boolean;
   showSale: boolean;
 }
 
-/** Header menu: New In, the top-level categories (with sub-categories), Lawn, Sale (each optional in Settings). */
+/** Header menu: New In, the top-level categories (with sub-categories), Best Sellers, Sale (each optional in Settings). */
 export function buildMenu(
   tree: NavCategory[],
-  options: MenuOptions = { showNewIn: true, showLawn: true, showSale: true },
+  options: MenuOptions = { showNewIn: true, showBestSellers: true, showSale: true },
 ): MenuItem[] {
   const items: (MenuItem | false)[] = [
     options.showNewIn && {
@@ -114,7 +109,12 @@ export function buildMenu(
         href: `/collections/${child.slug}`,
       })),
     })),
-    options.showLawn && { label: "Lawn", href: "/collections/lawn", children: [], image: null },
+    options.showBestSellers && {
+      label: "Best Sellers",
+      href: "/collections/best-sellers",
+      children: [],
+      image: null,
+    },
     options.showSale && {
       label: "Sale",
       href: "/collections/sale",

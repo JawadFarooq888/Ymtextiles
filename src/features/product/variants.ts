@@ -3,13 +3,86 @@ export interface SelectableVariant {
   sku: string;
   stock: number;
   priceOverride: number | null;
-  size: { id: string; label: string; sortOrder: number };
+  /** waist/length in inches for jeans sizes (both set), otherwise undefined/null */
+  size: {
+    id: string;
+    label: string;
+    sortOrder: number;
+    waist?: number | null;
+    length?: number | null;
+  };
   colour: { id: string; name: string; hex: string };
 }
 
 export interface Selection {
   sizeId: string | null;
   colourId: string | null;
+  /** Jeans: waist and length are chosen separately; sizeId is set once both match a size. */
+  waist?: number | null;
+  length?: number | null;
+}
+
+/** True when every size is a waist + length size, so the shop shows two separate choices. */
+export function isWaistLengthSizing(variants: SelectableVariant[]) {
+  return (
+    variants.length > 0 && variants.every((v) => v.size.waist != null && v.size.length != null)
+  );
+}
+
+export function uniqueWaists(variants: SelectableVariant[]) {
+  return [...new Set(variants.map((v) => v.size.waist!))].sort((a, b) => a - b);
+}
+
+export function uniqueLengths(variants: SelectableVariant[]) {
+  return [...new Set(variants.map((v) => v.size.length!))].sort((a, b) => a - b);
+}
+
+/** Size id for a waist + length pair, if this product has that size. */
+export function sizeIdFor(
+  variants: SelectableVariant[],
+  waist: number | null,
+  length: number | null,
+) {
+  if (waist == null || length == null) return null;
+  return variants.find((v) => v.size.waist === waist && v.size.length === length)?.size.id ?? null;
+}
+
+/** In stock for this waist, given the length and colour already chosen? */
+export function waistAvailable(variants: SelectableVariant[], waist: number, sel: Selection) {
+  return variants.some(
+    (v) =>
+      v.stock > 0 &&
+      v.size.waist === waist &&
+      (sel.length == null || v.size.length === sel.length) &&
+      (sel.colourId === null || v.colour.id === sel.colourId),
+  );
+}
+
+/** In stock for this length, given the waist and colour already chosen? */
+export function lengthAvailable(variants: SelectableVariant[], length: number, sel: Selection) {
+  return variants.some(
+    (v) =>
+      v.stock > 0 &&
+      v.size.length === length &&
+      (sel.waist == null || v.size.waist === sel.waist) &&
+      (sel.colourId === null || v.colour.id === sel.colourId),
+  );
+}
+
+/** Colour availability for jeans also respects a waist or length chosen on its own. */
+export function colourAvailableFor(
+  variants: SelectableVariant[],
+  colourId: string,
+  sel: Selection,
+) {
+  return variants.some(
+    (v) =>
+      v.stock > 0 &&
+      v.colour.id === colourId &&
+      (sel.sizeId === null || v.size.id === sel.sizeId) &&
+      (sel.waist == null || v.size.waist === sel.waist) &&
+      (sel.length == null || v.size.length === sel.length),
+  );
 }
 
 export function uniqueSizes(variants: SelectableVariant[]) {
@@ -49,14 +122,22 @@ export function findVariant(variants: SelectableVariant[], sel: Selection) {
   return variants.find((v) => v.size.id === sel.sizeId && v.colour.id === sel.colourId) ?? null;
 }
 
-/** Pre-select an option when there is only one choice (e.g. "Unstitched" as the only size). */
+/** Pre-select an option when there is only one choice (e.g. a one-size item or a single wash). */
 export function initialSelection(variants: SelectableVariant[]): Selection {
   const sizes = uniqueSizes(variants);
   const colours = uniqueColours(variants);
-  return {
+  const selection: Selection = {
     sizeId: sizes.length === 1 ? sizes[0].id : null,
     colourId: colours.length === 1 ? colours[0].id : null,
   };
+  if (isWaistLengthSizing(variants)) {
+    const waists = uniqueWaists(variants);
+    const lengths = uniqueLengths(variants);
+    selection.waist = waists.length === 1 ? waists[0] : null;
+    selection.length = lengths.length === 1 ? lengths[0] : null;
+    selection.sizeId = sizeIdFor(variants, selection.waist, selection.length);
+  }
+  return selection;
 }
 
 /** Unit price in pence: variant override first, then sale price, then regular price. */

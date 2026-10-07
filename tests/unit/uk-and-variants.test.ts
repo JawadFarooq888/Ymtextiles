@@ -98,6 +98,10 @@ describe("variant SKUs", () => {
     expect(attributeCode("Unstitched")).toBe("UNS");
     expect(attributeCode("XL")).toBe("XL");
     expect(variantSku("YM-LWN-001", "M", "Green")).toBe("YM-LWN-001-M-GRN");
+    // Waist and length both stay in the SKU, so W32 L30 and W32 L32 never clash.
+    expect(variantSku("YM-JN-001", "W32 L30", "Black")).toBe("YM-JN-001-W32L30-BLC");
+    expect(variantSku("YM-JN-001", "W32 L32", "Black")).toBe("YM-JN-001-W32L32-BLC");
+    expect(variantSku("YM-JN-001", "7-8Y", "Mid Blue")).toBe("YM-JN-001-78Y-MDB");
   });
 });
 

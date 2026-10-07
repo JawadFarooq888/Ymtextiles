@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { parseSizeChart } from "@/features/size-charts/chart";
 import type { Settings } from "@prisma/client";
 import { SizeChartTable } from "@/features/product/components/size-chart-dialog";
 import { buildWhatsAppUrl } from "@/features/whatsapp/url";
@@ -10,18 +10,8 @@ import { formatPence } from "@/lib/money";
  */
 export interface LiveContext {
   settings: Settings;
-  sizeCharts: { id: string; name: string; rows: unknown; notes: string | null }[];
+  sizeCharts: { id: string; name: string; columns: unknown; rows: unknown; notes: string | null }[];
 }
-
-const chartRows = z.array(
-  z.object({
-    size: z.string(),
-    chest: z.number(),
-    length: z.number(),
-    sleeve: z.number(),
-    trouserLength: z.number(),
-  }),
-);
 
 export function LiveInfoBefore({ slug, ctx }: { slug: string; ctx: LiveContext }) {
   const { settings } = ctx;
@@ -87,12 +77,12 @@ export function LiveInfoAfter({ slug, ctx }: { slug: string; ctx: LiveContext })
   return (
     <>
       {ctx.sizeCharts.map((chart) => {
-        const rows = chartRows.safeParse(chart.rows);
-        return rows.success && rows.data.length ? (
+        const data = parseSizeChart(chart.columns, chart.rows);
+        return data ? (
           <section key={chart.id}>
             <h2>{chart.name}</h2>
             <div className="not-prose">
-              <SizeChartTable rows={rows.data} notes={chart.notes} name={chart.name} />
+              <SizeChartTable chart={data} notes={chart.notes} name={chart.name} />
             </div>
           </section>
         ) : null;

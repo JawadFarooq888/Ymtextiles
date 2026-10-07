@@ -69,8 +69,12 @@ model Product {
   sku            String         @unique
   description    String         @default("") // rich text (HTML)
   careDetails    String?
-  fabric         String? // Lawn, Chiffon, Cambric, Khaddar, Organza...
-  pieces         Int? // 1, 2 or 3 piece
+  fabric         String? // Denim composition, e.g. "98% cotton, 2% elastane"
+  fit            String? // Skinny, Slim, Straight, Relaxed, Bootcut, Wide leg, Mom...
+  rise           String? // Low, Mid, High
+  stretch        String? // No stretch, Comfort stretch, Super stretch
+  // Not used for jeans; kept so older data and CSV files still load.
+  pieces         Int?
   type           ProductType    @default(STITCHED)
   basePrice      Int
   salePrice      Int?
@@ -112,7 +116,10 @@ model ProductImage {
 
 model Size {
   id        String    @id @default(cuid())
-  label     String    @unique
+  label     String    @unique // e.g. "W32 L30", or "7-8Y" for kids
+  // Jeans sizing in inches. Both set = shown as separate Waist and Length choices.
+  waist     Int?
+  length    Int?
   sortOrder Int       @default(0)
   variants  Variant[]
 }
@@ -148,7 +155,10 @@ model Variant {
 model SizeChart {
   id        String    @id @default(cuid())
   name      String    @unique
-  // Array of rows: { size, chest, length, sleeve, trouserLength } in inches; cm is derived for display.
+  // Column names in order, e.g. ["Waist", "Hip", "Inside leg", "Front rise", "Leg opening"].
+  columns   Json      @default("[]")
+  // Array of rows: { size: string, values: (number | null)[] } in inches, one value per column.
+  // Centimetres are worked out for display.
   rows      Json
   notes     String?
   products  Product[]
@@ -257,15 +267,17 @@ model Settings {
   // WhatsApp orders: when false, customers outside the UK can order (postcode/town is free text).
   whatsappUkOnly        Boolean  @default(true)
   // Shop text
-  footerTagline         String   @default("Pakistani clothing, sourced in Pakistan and stocked in the UK.")
+  footerTagline         String   @default("Jeans for men, women and kids, stocked in the UK.")
   dispatchInfo          String? // e.g. "Orders are dispatched within 2 working days"
   // Array of { title, text } for the home page "Why YM Textiles" section; null = defaults.
   whyUs                 Json?
   // Search engines
-  seoTitle              String   @default("YM Textiles | Pakistani Clothing in the UK")
-  seoDescription        String   @default("Lawn suits, ready to wear, unstitched fabric, formal and wedding wear, and menswear. Sourced in Pakistan, stocked in the UK.")
+  seoTitle              String   @default("YM Textiles | Jeans for Men, Women & Kids")
+  seoDescription        String   @default("Jeans for men, women and kids in every fit: skinny, slim, straight and wide leg. Find your waist and length. UK delivery.")
   // Header menu shortcuts
   menuShowNewIn         Boolean  @default(true)
+  menuShowBestSellers   Boolean  @default(true)
+  // Legacy (from the clothing version); unused. Kept so deploys never break the live site.
   menuShowLawn          Boolean  @default(true)
   menuShowSale          Boolean  @default(true)
   updatedAt             DateTime @updatedAt
